@@ -1,0 +1,11 @@
+engineer(s|ed|ing)
+\bmodif(?!ier)(ies|ied|y|ication|iable|iability)(?! food)(?! corn)(?! crop)
+\balter(\b|s\b|ed\b|ation\b|ing\b|able\b|ability\b)
+revision(\b|s\b)
+\bedit(?!:)(\b|s|ed|ing|able|ability)
+rewrit(\b|e|es|ing|able|ability)
+rewrote
+amend(\b|s|ed|ing|able|ability|atory)
+\breshape
+\brevise
+rectif

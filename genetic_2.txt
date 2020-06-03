@@ -1,0 +1,8 @@
+\bgen(ic\b|e\b|es\b|etic\b|etical\b|etically\b|ome\b)
+Clustered regularly interspaced short palindromic repeats
+crispr(\b|ed)
+\brna\b
+stem-cell
+germline
+Epigenetic
+Eugenic
