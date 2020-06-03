@@ -5,10 +5,6 @@
 # job name:
 #SBATCH -J train_gru
 
-# priority
-##SBATCH --account=bibs-frankmj-condo
-#SBATCH --account=carney-frankmj-condo
-
 # email error reports
 #SBATCH --mail-user=noah_jones@brown.edu 
 #SBATCH --mail-type=ALL
