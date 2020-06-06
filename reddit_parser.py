@@ -105,7 +105,7 @@ class Parser(object):
 
     def __init__(self, nlp_wrapper=StanfordCoreNLP('http://localhost:9000'),bert_tokenizer=BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True), clean_raw=CLEAN_RAW, dates=dates,
                  download_raw=DOWNLOAD_RAW, hashsums=None, NN=NN, path=path,
-                 legality=legality, marijuana=marijuana, stop=stop,
+                 genetic=genetic, disease=disease, engineering=engineering stop=stop,
                  write_original=WRITE_ORIGINAL, vote_counting=vote_counting, author=author, sentiment=sentiment,
                  on_file=on_file,num_process=num_process,rel_sample_num=rel_sample_num,balanced_rel_sample=balanced_rel_sample,Neural_Relevance_Filtering=Neural_Relevance_Filtering):
         # check input arguments for valid type
@@ -128,8 +128,9 @@ class Parser(object):
         self.hashsums = hashsums
         self.NN = NN
         self.path = path
-        self.legality = legality
-        self.marijuana = marijuana
+        self.genetic = genetic
+        self.disease = disease
+        self.engineering = engineering
         self.stop = stop
         self.write_original = write_original
         self.vote_counting = vote_counting
@@ -517,8 +518,8 @@ class Parser(object):
                 original_body = html.unescape(comment["body"])  # original text
 
                 # filter comments by relevance to the topic according to regex
-                if any(not exp.search(original_body.lower()) is None for exp in marijuana) and any(
-                        not exp.search(original_body.lower()) is None for exp in legality):
+                if any(not exp.search(original_body.lower()) is None for exp in genetic) and any(
+                        not exp.search(original_body.lower()) is None for exp in engineering) and any(not exp.search(original_body.lower()) is None for exp in genetic):
 
                     # preprocess the comments
                     ## TODO is this for one comment or for all of the comments in a month?
