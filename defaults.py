@@ -14,7 +14,7 @@ import numpy as np
 
 ### Model choice hyperparameters
 
-NN = True # Set to False for LDA, to true for neural network classification
+NN = False # Set to False for LDA, to true for neural network classification
 ENTIRE_CORPUS = True # Are we using a random subset of comments, or the whole
 # dataset? The names of model files and output directories will include the
 # value of this variable (e.g. the default LDA output directory label is
@@ -53,7 +53,7 @@ calculate_perc_rel = True # whether the percentage of relevant comments from
 # each year should be calculated and written to file
 num_process = 3 # the number of parallel processes to be executed for parsing
 # NOTE: Uses Python's multiprocessing package
-Neural_Relevance_Filtering = True # The dataset will be cleaned from posts
+Neural_Relevance_Filtering = False # The dataset will be cleaned from posts
 # irrelevant to the topic using a pre-trained neural network model.
 # NOTE: Needs results of parsing for the same dates with WRITE_ORIGINAL==True
 # NOTE: Requires a pre-trained simpletransformers model. One such model trained
@@ -67,7 +67,7 @@ rel_sample_num = 200 # By default, a random sample of this size will be extracte
 # are more numerous in the dataset than about half this number.
 balanced_rel_sample = True # whether the random filtering sample should be
 # balanced across classification categories (relevant, irrelevant by default)
-eval_relevance = True # F1, recall, precision and accuracy for the sample derived
+eval_relevance = False # F1, recall, precision and accuracy for the sample derived
 # from Neural_Relevance_Filtering. Requires the sample to be complemented by
 # manual labels. The default location for the sample is
 # [repository path]/original_comm/sample_auto_labeled.csv
@@ -241,16 +241,20 @@ for word in set(nltk.corpus.stopwords.words('english')):
         stop.append(str(word))
 
 ### Define the regex filter used for finding relevant comments
+        
+# get the list of relevant words from disk
+regex_iteration = 2 
+engineering = []
+with open("engineering_biased_" + regex_iteration + ".txt"", 'r') as f: 
+    for line in f: 
+        engineering.append(re.compile(line.lower().strip()))
 
-# get the list of words relevant to legality from disk
-# (requires legality.txt to be located in the same directory)
-legality = []
-with open("legality.txt",'r') as f:
-    for line in f:
-        legality.append(re.compile(line.lower().strip()))
-# get the list of words relevant to marijuana from disk
-# (requires marijuana.txt be located in the same directory)
-marijuana = []
-with open("marijuana.txt",'r') as f:
-    for line in f:
-        marijuana.append(re.compile(line.lower().strip()))
+gene = []
+with open("genetic_biased_" + regex_iteration + ".txt", 'r') as f: 
+    for line in f: 
+        gene.append(re.compile(line.lower().strip())) 
+
+disease = []
+with open("disease_biased_" + regex_iteration + ".txt", 'r') as f: 
+    for line in f: 
+        disease.append(re.compile(line.lower().strip()))
