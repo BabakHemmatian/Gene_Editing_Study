@@ -57,6 +57,8 @@ theparser.lang_filtering()
 # available, the following function retrieves alternative sentiment measures
 # (from NLTK's Vader and CoreNLP)
 
+sys.exit(1)
+
 # NOTE: Make sure that Stanford CoreNLP's Python package is unzipped to the
 # same directory as this file and CoreNLP_server.py is also available before
 # running this function.
