@@ -174,7 +174,7 @@ min_comm_length = 20 # the minimum acceptable number of words in a sampled
 # topic of each word is set to be simply the most probable topic. When False,
 # the topic of each word is set to the entire probability distribution over
 # num_topics topics.
-num_pop = 2000 # number of the most up- or down-voted comments sampled for model
+num_pop = None # number of the most up- or down-voted comments sampled for model
 # comparison. Set to None for no sampling. Needs data parsed with
 # write_original = True
 
