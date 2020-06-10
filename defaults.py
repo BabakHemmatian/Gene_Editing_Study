@@ -26,12 +26,12 @@ DOWNLOAD_RAW = True # If a raw data file is not available on disk, download it
 # https://files.pushshift.io/reddit/comments/ beyond 02-2019, as they would
 # not be reflected in the parser's code, which assumes the latest files have
 # .zst extensions
-CLEAN_RAW = True # After parsing, delete the raw data file from disk if it was
+CLEAN_RAW = False # After parsing, delete the raw data file from disk if it was
 # not downloaded during parsing
 vote_counting = True # Record the fuzzed number of upvotes when parsing
 WRITE_ORIGINAL = True # Write original comments to file when parsing
 author = True # Write the username of each post's author to a separate file
-sentiment = True # Write sentence- and document-level sentiment of a post to
+sentiment = False # Write sentence- and document-level sentiment of a post to
 # file (based on TextBlob, Vader and CoreNLP packages)
 
 
@@ -81,7 +81,7 @@ n_random_comments = 1500 # number of comments to sample from each year for
 iterations = 1000 # number of times LDA posterior distributions will be sampled
 num_threads = 5 # number of threads used for parallelized processing of comments
 # Only matters if using _Threaded functions
-num_topics = 100 # number of topics to be generated in each LDA sampling
+num_topics = 50 # number of topics to be generated in each LDA sampling
 alpha = 0.1 # determines how many high probability topics will be assigned to a
 # document in general (not to be confused with NN l2regularization constant)
 minimum_probability = 0.01 # minimum acceptable probability for an output topic
@@ -90,7 +90,7 @@ eta = 0.1 # determines how many high probability words will be assigned to a
 # topic in general
 minimum_phi_value = 0.01 # determines the lower bound on per-term topic
 # probability. Only matters if per_word_topics = True.
-one_hot_topic_contributions=False
+one_hot_topic_contributions = False
 # NOTE: With bad model fits sum of topic contributions for certain posts may not
 # add up to close enough to 1 and the model would fail quality assurance assetion
 # checks. You can examine the cases that have failed the assertion in a file
@@ -163,11 +163,11 @@ sample_topics = 0.2 # proportion of topics that will be selected for reporting
 # NOTE: Must be a valid proportion (not None) if topic_idf = True
 top_topic_thresh = None # threshold for proportion contribution to the corpus
 # determining topics to report. Only matters if topic_idf = False
-topn = 80 # the number of high-probability words for each topic to be exported
+topn = 20 # the number of high-probability words for each topic to be exported
 # NOTE: Many of the words will inevitably be high probability general
 # non-content and non-framing words. So topn should be set to significantly
 # higher than the number of relevant words you wish to see
-sample_comments = 25 # number of comments that will be sampled from top topics
+sample_comments = 5 # number of comments that will be sampled from top topics
 min_comm_length = 20 # the minimum acceptable number of words in a sampled
 # comment. Set to None for no length filtering
 # Determines how topic contributions are calculated. When set to True, the
@@ -189,9 +189,10 @@ path = os.path.dirname(file_path)
 # accordingly
 
 ## Year/month combinations to get Reddit data for
+
 dates=[] # initialize a list to contain the year, month tuples
-months=range(1,12) # month range
-years=range(2008,2020) # year range
+months= [1] # month range
+years= [2015]# year range
 for year in years:
     for month in months:
         dates.append((year,month))
