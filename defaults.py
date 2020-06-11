@@ -191,7 +191,7 @@ path = os.path.dirname(file_path)
 ## Year/month combinations to get Reddit data for
 
 dates=[] # initialize a list to contain the year, month tuples
-months= [1] # month range
+months= range(1,13) # month range
 years= [2015]# year range
 for year in years:
     for month in months:
