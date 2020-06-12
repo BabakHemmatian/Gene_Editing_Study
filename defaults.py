@@ -245,13 +245,14 @@ for word in set(nltk.corpus.stopwords.words('english')):
         
 # get the list of relevant words from disk
 regex_iteration = "2" 
+
 engineering = []
 with open("engineering_" + regex_iteration + ".txt", 'r') as f: 
     for line in f: 
         engineering.append(re.compile(line.lower().strip()))
 
 genetic = []
-with open("genetic_" + regex_iteration + ".txt", 'r') as f: 
+with open("genetic_" + regex_iteration + ".txt", 'r') as f:
     for line in f: 
         genetic.append(re.compile(line.lower().strip())) 
 
