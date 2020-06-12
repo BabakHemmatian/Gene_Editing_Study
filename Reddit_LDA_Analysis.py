@@ -123,9 +123,7 @@ ldam.Get_Topic_Contribution()
 ldam.get_top_topics()
 
 ## Plot the temporal trends in the top topics and save it to the output path
-#ldam.Plotter("{}/Temporal_Trend-{}-{}-{}".format(ldam.output_path,
-                                                 "1hot" if one_hot_topic_contributions else "MLE", str(num_topics),
-                                                 "idf" if topic_idf else "f"))
+#ldam.Plotter("{}/Temporal_Trend-{}-{}-{}".format(ldam.output_path, "1hot" if one_hot_topic_contributions else "MLE", str(num_topics), "idf" if topic_idf else "f"))
 
 ## Find the top words associated with top topics and write them to file
 with open("{}/top_words-{}".format(

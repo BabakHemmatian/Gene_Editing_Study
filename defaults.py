@@ -51,7 +51,7 @@ NN_training_fraction = 0.80 # fraction of the data that is used for training
 # divided randomly and equally into evaluation and test sets
 calculate_perc_rel = True # whether the percentage of relevant comments from
 # each year should be calculated and written to file
-num_process = 3 # the number of parallel processes to be executed for parsing
+num_process = 6 # the number of parallel processes to be executed for parsing
 # NOTE: Uses Python's multiprocessing package
 Neural_Relevance_Filtering = False # The dataset will be cleaned from posts
 # irrelevant to the topic using a pre-trained neural network model.
@@ -244,18 +244,18 @@ for word in set(nltk.corpus.stopwords.words('english')):
 ### Define the regex filter used for finding relevant comments
         
 # get the list of relevant words from disk
-regex_iteration = 2 
+regex_iteration = "2" 
 engineering = []
-with open("engineering_biased_" + regex_iteration + ".txt"", 'r') as f: 
+with open("engineering_" + regex_iteration + ".txt", 'r') as f: 
     for line in f: 
         engineering.append(re.compile(line.lower().strip()))
 
-gene = []
-with open("genetic_biased_" + regex_iteration + ".txt", 'r') as f: 
+genetic = []
+with open("genetic_" + regex_iteration + ".txt", 'r') as f: 
     for line in f: 
-        gene.append(re.compile(line.lower().strip())) 
+        genetic.append(re.compile(line.lower().strip())) 
 
 disease = []
-with open("disease_biased_" + regex_iteration + ".txt", 'r') as f: 
+with open("disease_" + regex_iteration + ".txt", 'r') as f: 
     for line in f: 
         disease.append(re.compile(line.lower().strip()))

@@ -1,0 +1,19 @@
+***
+Time: 2020-06-11 18:58:59
+*** Hyperparameters ***
+Training fraction = 0.99
+Maximum vocabulary size = 2000000
+Minimum number of documents a token can appear in and be included = 5
+Fraction of documents, tokens appearing more often than which will be filtered out = 0.99
+Number of topics = 50
+Fraction of topics sampled = 0.2
+Number of top words recorded for each topic = 20
+Number of comments sampled from each top topic = 5
+Minimum comment length for sampled comments = 20
+Alpha (LDA) = 0.1
+Eta (LDA) = 0.1
+One-hot topic contribution calculation = False
+Topic idf inclusion in contribution calculation = False
+Topic idf frequency counter threshold = 0.1
+Minimum topic probability = 0.01
+Minimum term probability = 0.01

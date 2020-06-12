@@ -105,7 +105,7 @@ class Parser(object):
 
     def __init__(self, nlp_wrapper=StanfordCoreNLP('http://localhost:9000'),bert_tokenizer=BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True), clean_raw=CLEAN_RAW, dates=dates,
                  download_raw=DOWNLOAD_RAW, hashsums=None, NN=NN, path=path,
-                 genetic=genetic, disease=disease, engineering=engineering stop=stop,
+                 genetic=genetic, disease=disease, engineering=engineering, stop=stop,
                  write_original=WRITE_ORIGINAL, vote_counting=vote_counting, author=author, sentiment=sentiment,
                  on_file=on_file,num_process=num_process,rel_sample_num=rel_sample_num,balanced_rel_sample=balanced_rel_sample,Neural_Relevance_Filtering=Neural_Relevance_Filtering):
         # check input arguments for valid type
@@ -161,7 +161,7 @@ class Parser(object):
         else:
             url = BASE_URL + get_rc_filename(year, month)
         print('Sending request to {}.'.format(url))
-        os.system('cd {} && wget {}'.format(self.path, url))
+        os.system('cd {} && wget -nv {}'.format(self.path, url))
 
     ## Get Reddit compressed data file hashsums to check downloaded files'
     # integrity
