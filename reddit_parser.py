@@ -161,7 +161,7 @@ class Parser(object):
         else:
             url = BASE_URL + get_rc_filename(year, month)
         print('Sending request to {}.'.format(url))
-        os.system('cd {} && wget {}'.format(self.path, url))
+        os.system('cd {} && wget -nv {}'.format(self.path, url))
 
     ## Get Reddit compressed data file hashsums to check downloaded files'
     # integrity
