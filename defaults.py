@@ -51,7 +51,7 @@ NN_training_fraction = 0.80 # fraction of the data that is used for training
 # divided randomly and equally into evaluation and test sets
 calculate_perc_rel = True # whether the percentage of relevant comments from
 # each year should be calculated and written to file
-num_process = 3 # the number of parallel processes to be executed for parsing
+num_process = 6 # the number of parallel processes to be executed for parsing
 # NOTE: Uses Python's multiprocessing package
 Neural_Relevance_Filtering = False # The dataset will be cleaned from posts
 # irrelevant to the topic using a pre-trained neural network model.
@@ -250,7 +250,7 @@ with open("engineering_biased_" + regex_iteration + ".txt"", 'r') as f:
     for line in f: 
         engineering.append(re.compile(line.lower().strip()))
 
-gene = []
+genetic = []
 with open("genetic_biased_" + regex_iteration + ".txt", 'r') as f: 
     for line in f: 
         gene.append(re.compile(line.lower().strip())) 
