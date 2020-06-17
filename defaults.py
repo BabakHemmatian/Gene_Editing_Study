@@ -181,10 +181,14 @@ num_pop = None # number of the most up- or down-voted comments sampled for model
 ### Paths
 
 ## where the data is
-file_path = os.path.abspath(__file__)
-path = os.path.dirname(file_path)
+data_path = 'users/ssloman/data/Reddit_Dataset/'
 # NOTE: if not fully available on file, set Download for Parser function to
 # True (source: http://files.pushshift.io/reddit/comments/)
+
+## where the model will be
+file_path = os.path.abspath(__file__)
+path = os.path.dirname(file_path)
+
 # NOTE: if not in the same directory as this file, change the path variable
 # accordingly
 
