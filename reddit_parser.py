@@ -85,7 +85,7 @@ on_file = []
 for date in dates:
     mo, yr = date[0], date[1]
     proper_filename = get_rc_filename(mo, yr)
-    if Path(path + '/' + proper_filename).is_file():
+    if Path(data_path + '/' + proper_filename).is_file():
         on_file.append(proper_filename)
 
 
@@ -104,7 +104,7 @@ class Parser(object):
     #   clean_raw: Delete the raw data file when finished.
 
     def __init__(self, nlp_wrapper=StanfordCoreNLP('http://localhost:9000'),bert_tokenizer=BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True), clean_raw=CLEAN_RAW, dates=dates,
-                 download_raw=DOWNLOAD_RAW, hashsums=None, NN=NN, path=path,
+                 download_raw=DOWNLOAD_RAW, hashsums=None, NN=NN, path=path, data_path=data_path,
                  genetic=genetic, disease=disease, engineering=engineering, stop=stop,
                  write_original=WRITE_ORIGINAL, vote_counting=vote_counting, author=author, sentiment=sentiment,
                  on_file=on_file,num_process=num_process,rel_sample_num=rel_sample_num,balanced_rel_sample=balanced_rel_sample,Neural_Relevance_Filtering=Neural_Relevance_Filtering):
@@ -117,8 +117,9 @@ class Parser(object):
         assert type(download_raw) is bool
         assert type(clean_raw) is bool
         assert type(path) is str
+        assert type(data_path) is str
         # check the given path
-        if not os.path.exists(path):
+        if not os.path.exists(path) or not os.path.exists(data_path):
             raise Exception('Invalid path')
         assert type(stop) is set or type(stop) is list
 
@@ -161,7 +162,7 @@ class Parser(object):
         else:
             url = BASE_URL + get_rc_filename(year, month)
         print('Sending request to {}.'.format(url))
-        os.system('cd {} && wget -nv {}'.format(self.path, url))
+        os.system('cd {} && wget -nv {}'.format(self.data_path, url))
 
     ## Get Reddit compressed data file hashsums to check downloaded files'
     # integrity
@@ -188,7 +189,7 @@ class Parser(object):
     ## calculate hashsums for downloaded files in chunks of size 4096B
     def sha256(self, fname):
         hash_sha256 = hashlib.sha256()
-        with open("{}/{}".format(self.path, fname), "rb") as f:
+        with open("{}/{}".format(self.data_path, fname), "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_sha256.update(chunk)
         return hash_sha256.hexdigest()
@@ -493,14 +494,14 @@ class Parser(object):
 
             # open the file as a text file, in utf8 encoding, based on encoding type
             if '.zst' in filename:
-                file = open(filename, 'rb')
+                file = open(self.data_path + filename, 'rb')
                 dctx = zstd.ZstdDecompressor()
                 stream_reader = dctx.stream_reader(file)
                 fin = io.TextIOWrapper(stream_reader, encoding='utf-8')
             elif '.xz' in filename:
-                fin = lzma.open(filename, 'r')
+                fin = lzma.open(self.data_path + filename, 'r')
             elif '.bz2' in filename:
-                fin = bz2.BZ2File(self.path + '/' + filename, 'r')
+                fin = bz2.BZ2File(self.data_path + filename, 'r')
             else:
                 raise Exception('File format not recognized')
 
@@ -636,10 +637,10 @@ class Parser(object):
         print("Finished parsing " + filename + " at " + time.strftime('%l:%M%p, %m/%d/%Y'))
 
         # if the user wishes compressed data files to be removed after processing
-        if self.clean_raw and filename not in self.on_file and Path(filename).is_file():
-            print("Cleaning up {}/{}.".format(self.path, filename))
+        if self.clean_raw and filename not in self.on_file and Path(self.data_path + filename).is_file():
+            print("Cleaning up {}/{}.".format(self.data_path, filename))
             # delete the recently processed file
-            os.system('cd {} && rm {}'.format(self.path, filename))
+            os.system('cd {} && rm {}'.format(self.data_path, filename))
 
         return
 
@@ -1178,13 +1179,13 @@ class Parser(object):
         print("Finished retrieving and recording sentiment values at "
               + time.strftime('%l:%M%p, %m/%d/%Y'))  # timer
 
-    ## Uses a pre-trained neural network to prune dataset from irrelevant posts
-    def Neural_Relevance_Screen(self,data_path=path+"/original_comm/",
+        ## Uses a pre-trained neural network to prune dataset from irrelevant posts
+    def Neural_Relevance_Screen(self,rel_path=path+"/original_comm/",
     model_path=path+"/Human_Ratings/1_1/full_1005/",dates=dates,
     rel_sample_num=rel_sample_num,balanced_rel_sample=balanced_rel_sample):
 
         # check for previous screening results
-        if Path(data_path + "sample_auto_labeled.csv").is_file():
+        if Path(rel_path + "sample_auto_labeled.csv").is_file():
 
             print("A sample of auto-labeled posts was found, suggesting neural relevance screening was previously performed. Moving on.")
 
@@ -1214,10 +1215,10 @@ class Parser(object):
             total_count = 0 # counter for all documents in the dataset
 
             # check for a complete record of screening
-            if Path(data_path+"auto_labels").is_file():
+            if Path(rel_path+"auto_labels").is_file():
                 print("Found full dataset labels. Loading.")
 
-                with open(data_path+"auto_labels","r") as f:
+                with open(rel_path+"auto_labels","r") as f:
                     for line in f:
                         if line.strip() != "":
                             total_count += 1
@@ -1225,17 +1226,17 @@ class Parser(object):
             else: # if no previous record is found
 
                 # start a general record
-                with open(data_path+"auto_labels","w") as general_labels:
+                with open(rel_path+"auto_labels","w") as general_labels:
 
                     for yr,mo in dates: # for each month
 
                         start = time.time() # measure processing time
 
                         # if labels for that month exist, load them
-                        if Path(data_path+"auto_labels-{}-{}".format(yr,mo)).is_file():
+                        if Path(rel_path+"auto_labels-{}-{}".format(yr,mo)).is_file():
                             print("Found labels for year "+str(yr)+", month "+str(mo)+". Loading.")
 
-                            with open(data_path+"auto_labels-{}-{}".format(yr, mo),"r") as labels:
+                            with open(rel_path+"auto_labels-{}-{}".format(yr, mo),"r") as labels:
                                 for label in labels:
                                     if label.strip() != "":
                                         general_labels.write(label)
@@ -1253,7 +1254,7 @@ class Parser(object):
                                         total_count += int(line)
 
                             # use original comment text to auto-generate labels
-                            with open(data_path+"original_comm-{}-{}".format(yr, mo),"r") as texts, open(data_path+"auto_labels-{}-{}".format(yr, mo),"w") as labels:
+                            with open(rel_path+"original_comm-{}-{}".format(yr, mo),"r") as texts, open(rel_path+"auto_labels-{}-{}".format(yr, mo),"w") as labels:
 
                                 counter = 0 # doc counter for batching
 
@@ -1284,7 +1285,7 @@ class Parser(object):
 
             # read labels from disk and identify indices of irrelevant posts
             irrel_idxes = []
-            with open(data_path+"auto_labels","r") as labels:
+            with open(rel_path+"auto_labels","r") as labels:
                 for idx,line in enumerate(labels):
                     if line.strip() == '0' or line.strip() == 'None':
                         labels_array[idx] = 0
@@ -1340,7 +1341,7 @@ class Parser(object):
             sampled_docs = []
             int_counter = 0
 
-            with open(data_path+"original_comm","r") as sampling:
+            with open(rel_path+"original_comm","r") as sampling:
                 sampled_idxes =[]
                 for idx,sampler in enumerate(sampling):
                     try:
@@ -1370,7 +1371,7 @@ class Parser(object):
             # load labels for the sampled documents
             general_counter = 0
             sample_counter = 0
-            with open(data_path+"auto_labels","r") as labels:
+            with open(rel_path+"auto_labels","r") as labels:
                 for idx,line in enumerate(labels):
                     if idx in random_sample:
                         sampled_docs[sample_counter].append(line)
@@ -1383,7 +1384,7 @@ class Parser(object):
                 assert len(element) == 4
 
             # write the sampled files to a csvfile
-            with open(data_path+"sample_auto_labeled.csv", 'a+') as csvfile:
+            with open(rel_path+"sample_auto_labeled.csv", 'a+') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerow(['year','month','text','auto label','accuracy'])
                 for document in sampled_docs:
@@ -1557,14 +1558,14 @@ class Parser(object):
 
     ## Evaluates accuracy, f1, precision and recall for the relevance classifier
     # based on the random sample from Neural_Relevance_Screen
-    def eval_relevance(self,data_path=path+"/original_comm/"):
+    def eval_relevance(self,rel_path=path+"/original_comm/"):
 
         # check that the random sample is available
-        if not Path(data_path+"sample_auto_labeled.csv").is_file:
+        if not Path(rel_path+"sample_auto_labeled.csv").is_file:
             raise Exception("Random sample of classifier output not found.")
 
         else: # if it is
-            with open(data_path+"sample_auto_labeled.csv","r") as csvfile:
+            with open(rel_path+"sample_auto_labeled.csv","r") as csvfile:
                 reader = csv.reader(csvfile)
 
                 labels = [] # container for human labels
@@ -1626,7 +1627,7 @@ class Parser(object):
             fn = 0
 
         # Write evaluation measures if they are calculable to file
-        with open(data_path+"eval_results.txt","a+") as f:
+        with open(rel_path+"eval_results.txt","a+") as f:
 
             # Record the confusion matrix
             print("Confusion matrix: "+ str(label_measures) + "\n")
