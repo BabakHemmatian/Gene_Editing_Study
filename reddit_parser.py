@@ -1,3 +1,4 @@
+import codecs
 import bz2
 import copy
 import errno
@@ -351,8 +352,8 @@ class Parser(object):
         try:
             annot_doc = self.nlp_wrapper.annotate(original_without_quotes, properties={
                 'annotators': 'sentiment',
-                'outputFormat': 'json',
-                'timeout': 1000000 })
+                'outputFormat': 'json','parse.maxlen':100,'parse.nthreads':3,
+                'timeout': 100000 })
             with open(fns["c_sentiments"],"a+") as c_sentiments:
                 if len(annot_doc['sentences']) == 0:
                     c_sentiments.write(str(0)+",\n")
@@ -497,11 +498,11 @@ class Parser(object):
                 file = open(self.data_path + filename, 'rb')
                 dctx = zstd.ZstdDecompressor()
                 stream_reader = dctx.stream_reader(file)
-                fin = io.TextIOWrapper(stream_reader, encoding='utf-8')
+                fin = io.TextIOWrapper(stream_reader, encoding='utf-8',errors='ignore')
             elif '.xz' in filename:
-                fin = lzma.open(self.data_path + filename, 'r')
+                fin = lzma.open(self.data_path + filename, 'r',encoding='utf-8',errors='ignore')
             elif '.bz2' in filename:
-                fin = bz2.BZ2File(self.data_path + filename, 'r')
+                fin = bz2.BZ2File(self.data_path + filename, 'r', encoding='utf-8',errors='ignore')
             else:
                 raise Exception('File format not recognized')
 
@@ -511,10 +512,6 @@ class Parser(object):
                 main_counter += 1  # update the general counter
 
                 # decode and parse the json, and turn it into regular text
-                if not '.zst' in filename:
-                    comment = line.decode()
-                else:
-                    comment = line
                 comment = decoder.decode(comment)
                 original_body = html.unescape(comment["body"])  # original text
 
@@ -1161,8 +1158,8 @@ class Parser(object):
                         # retrieve sentiment estimates from CoreNLP
                         annot_doc = nlp_wrapper.annotate(comment, properties={
                             'annotators': 'sentiment',
-                            'outputFormat': 'json',
-                            'timeout': 1000000, })
+                            'outputFormat': 'json','parse.maxlen':100,'parse.nthreads':3,
+                            'timeout': 100000, })
 
                         # store the values for each sentence in a list
                         sent_values = []
