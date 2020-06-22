@@ -183,6 +183,7 @@ num_pop = None # number of the most up- or down-voted comments sampled for model
 ## where the data is
 file_path = os.path.abspath(__file__)
 path = os.path.dirname(file_path)
+data_path = path
 # NOTE: if not fully available on file, set Download for Parser function to
 # True (source: http://files.pushshift.io/reddit/comments/)
 # NOTE: if not in the same directory as this file, change the path variable

@@ -130,6 +130,7 @@ class Parser(object):
         self.hashsums = hashsums
         self.NN = NN
         self.path = path
+        self.data_path = data_path
         self.genetic = genetic
         self.disease = disease
         self.engineering = engineering
@@ -495,7 +496,7 @@ class Parser(object):
 
             # open the file as a text file, in utf8 encoding, based on encoding type
             if '.zst' in filename:
-                file = open(self.data_path + filename, 'rb')
+                file = open(self.data_path + filename, 'r')
                 dctx = zstd.ZstdDecompressor()
                 stream_reader = dctx.stream_reader(file)
                 fin = io.TextIOWrapper(stream_reader, encoding='utf-8',errors='ignore')
