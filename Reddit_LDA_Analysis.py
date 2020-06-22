@@ -33,6 +33,10 @@ Write_Performance()
 # random_indices, RC_Count_Dict, RC_Count_List, total_count and votes
 
 theparser = Parser()
+
+# create folders for storing dataset info
+theparser.safe_dir_create()
+
 theparser.Parse_Rel_RC_Comments()
 
 #if Neural_Relevance_Filtering:
@@ -62,7 +66,6 @@ theparser.lang_filtering()
 # running this function.
 #if add_sentiment:
 #   theparser.add_sentiment()
-sys.exit(1)
 
 ## call the function for calculating the percentage of relevant comments
 if calculate_perc_rel:

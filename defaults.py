@@ -51,7 +51,7 @@ NN_training_fraction = 0.80 # fraction of the data that is used for training
 # divided randomly and equally into evaluation and test sets
 calculate_perc_rel = True # whether the percentage of relevant comments from
 # each year should be calculated and written to file
-num_process = 6 # the number of parallel processes to be executed for parsing
+num_process = 3 # the number of parallel processes to be executed for parsing
 # NOTE: Uses Python's multiprocessing package
 Neural_Relevance_Filtering = False # The dataset will be cleaned from posts
 # irrelevant to the topic using a pre-trained neural network model.
@@ -192,7 +192,7 @@ path = os.path.dirname(file_path)
 
 dates=[] # initialize a list to contain the year, month tuples
 months= range(1,13) # month range
-years= [2015]# year range
+years= [2018]# year range
 for year in years:
     for month in months:
         dates.append((year,month))
