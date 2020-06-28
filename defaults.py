@@ -49,7 +49,7 @@ training_fraction = 0.99 # what percentage of data will be used for learning the
 NN_training_fraction = 0.80 # fraction of the data that is used for training
 # the neural network.[1 - training_fraction] fraction of the dataset will be
 # divided randomly and equally into evaluation and test sets
-calculate_perc_rel = True # whether the percentage of relevant comments from
+calculate_perc_rel = False # whether the percentage of relevant comments from
 # each year should be calculated and written to file
 num_process = 3 # the number of parallel processes to be executed for parsing
 # NOTE: Uses Python's multiprocessing package
@@ -181,11 +181,15 @@ num_pop = None # number of the most up- or down-voted comments sampled for model
 ### Paths
 
 ## where the data is
-file_path = os.path.abspath(__file__)
-path = os.path.dirname(file_path)
-data_path = path
+data_path = 'users/ssloman/data/Reddit_Dataset/'
+
 # NOTE: if not fully available on file, set Download for Parser function to
 # True (source: http://files.pushshift.io/reddit/comments/)
+
+## where the model will be
+file_path = os.path.abspath(__file__)
+path = os.path.dirname(file_path)
+
 # NOTE: if not in the same directory as this file, change the path variable
 # accordingly
 

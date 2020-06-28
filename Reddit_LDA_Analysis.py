@@ -34,7 +34,8 @@ Write_Performance()
 
 theparser = Parser()
 
-# create folders for storing dataset info
+# create relevant subfolders for storing dataset details
+
 theparser.safe_dir_create()
 
 theparser.Parse_Rel_RC_Comments()

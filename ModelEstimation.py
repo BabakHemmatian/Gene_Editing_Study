@@ -120,6 +120,7 @@ class ModelEstimator(object):
             if not self.special_doi:  # if not doing classification on
                 # human-rated comments over a DOI
                 num_comm = list(indices)[-1]  # retrieve the total number of comments
+                print(num_comm)
                 indices = range(num_comm)  # define sets over all comments
 
             else:  # if doing classification on sampled comments based on a DOI
@@ -382,10 +383,10 @@ class LDAModel(ModelEstimator):
         self.top_topic_set = top_topic_set
 
     def get_fns(self, **kwargs):
-        fns = {"original_comm": "{}/original_comm".format(self.path),
-               "lda_prep": "{}/lda_prep".format(self.path),
+        fns = {"original_comm": "{}/original_comm/original_comm".format(self.path),
+               "lda_prep": "{}/lda_prep/lda_prep".format(self.path),
                "counts": parser_fns["counts"] if self.all_ else parser_fns["counts_random"],
-               "indices_random": "{}/random_indices".format(self.path),
+               "indices_random": "{}/random_indices/random_indices".format(self.path),
                "train_set": "{}/LDA_train_set_{}".format(self.path, self.all_),
                "eval_set": "{}/LDA_eval_set_{}".format(self.path, self.all_),
                "corpus": "{}/RC_LDA_Corpus_{}.mm".format(self.path, self.all_),
@@ -412,9 +413,9 @@ class LDAModel(ModelEstimator):
                                                                    "idf" if self.topic_idf else "f"),
                "popular_comments": "{}/popular_comments-{}.csv".format(self.output_path,
                                                                        "idf" if self.topic_idf else "f"),
-               "original_comm": "{}/original_comm".format(self.path),
-               "counts": "{}/RC_Count_List".format(self.path),
-               "votes": "{}/votes".format(self.path),
+               "original_comm": "{}/original_comm/original_comm".format(self.path),
+               "counts": "{}/counts/RC_Count_List".format(self.path),
+               "votes": "{}/votes/votes".format(self.path),
                "data_for_R": "{}/data_for_R-{}.csv".format(self.output_path,
                                                            "idf" if self.topic_idf else "f")
                }
@@ -507,7 +508,7 @@ class LDAModel(ModelEstimator):
 
                 else:  # if the index is in neither set and we're processing the entire corpus, raise an Exception
                     if self.all_:
-                        raise Exception('Error in processing comment indices')
+                        raise Exception('Error in processing comment index '+str(index))
                     continue
 
             # write the number of words in the frequency-filtered corpus to file

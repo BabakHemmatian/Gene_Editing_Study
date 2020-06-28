@@ -1,4 +1,3 @@
-import codecs
 import bz2
 import copy
 import errno
@@ -427,9 +426,6 @@ class Parser(object):
             # preprocess raw data
             # if the file is available on disk and download is on, prevent deletion
             if not filename in self.on_file and self.download_raw:
-                print("MONTH and YEAR")
-                print(month)
-                print(year)
                 self.download(year, month)  # download the relevant file
 
                 # check data file integrity and download again if needed
@@ -492,18 +488,21 @@ class Parser(object):
             # create a file to store the relevant cummulative indices for each month
             ccount = open(fns["counts"], 'w')
 
+            warning_counter = 0
             main_counter = 0
 
             # open the file as a text file, in utf8 encoding, based on encoding type
             if '.zst' in filename:
-                file = open(self.data_path + filename, 'r')
+
+                file = open(self.data_path + filename, 'rb')
+
                 dctx = zstd.ZstdDecompressor()
                 stream_reader = dctx.stream_reader(file)
-                fin = io.TextIOWrapper(stream_reader, encoding='utf-8',errors='ignore')
+                fin = io.TextIOWrapper(stream_reader,encoding='utf-8',errors='ignore')
             elif '.xz' in filename:
-                fin = lzma.open(self.data_path + filename, 'r',encoding='utf-8',errors='ignore')
+                fin = lzma.open(self.data_path + filename, 'r')
             elif '.bz2' in filename:
-                fin = bz2.BZ2File(self.data_path + filename, 'r', encoding='utf-8',errors='ignore')
+                fin = bz2.BZ2File(self.data_path + filename, 'r')
             else:
                 raise Exception('File format not recognized')
 
@@ -512,9 +511,23 @@ class Parser(object):
             for line in fin:  # for each comment
                 main_counter += 1  # update the general counter
 
+                if '.zst' not in filename:
+                    line = line.decode('utf-8','ignore')
+
                 # decode and parse the json, and turn it into regular text
-                comment = decoder.decode(comment)
-                original_body = html.unescape(comment["body"])  # original text
+                try:
+                    comment = decoder.decode(line)
+                    original_body = html.unescape(comment["body"])  # original text
+                except:
+                    warning_counter += 1
+                    if warning_counter < 10:
+                        print("Warning! Invalid JSON sequence encountered. Ignoring this document.")
+                        continue
+                    elif warning_counter == 10:
+                        print("Too many errors. Warnings turned off.")
+                        continue
+                    else:
+                        continue
 
                 # filter comments by relevance to the topic according to regex
                 if any(not exp.search(original_body.lower()) is None for exp in genetic) and any(
@@ -601,6 +614,8 @@ class Parser(object):
                         timedict[created_at] = timedict.get(created_at, 0)
                         timedict[created_at] += 1
                         per_file_counter += 1
+
+            print("{} corrupted posts were ignored in the raw dataset".format(warning_counter))
 
             # write the total number of posts from the month to disk to aid in
             # calculating proportion relevant if calculate_perc_rel = True
@@ -744,69 +759,69 @@ class Parser(object):
                 # check for other required files aside from main data
                 missing_files = 0
 
-                if not Path(self.path + "counts/RC_Count_List").is_file():
+                if not Path(self.path + "/counts/RC_Count_List").is_file():
                     missing_files += 1
 
-                if not Path(self.path + "votes/votes").is_file() and self.vote_counting:
+                if not Path(self.path + "/votes/votes").is_file() and self.vote_counting:
                     missing_files += 1
 
-                if not Path(self.path + "author/author").is_file() and self.author:
+                if not Path(self.path + "/author/author").is_file() and self.author:
                     missing_files += 1
 
-                if not Path(self.path + "sentiments/sentiments").is_file() and self.sentiment:
+                if not Path(self.path + "/sentiments/sentiments").is_file() and self.sentiment:
                     missing_files += 1
 
-                if not Path(self.path + "sentiments/v_sentiments").is_file() and self.sentiment:
+                if not Path(self.path + "/sentiments/v_sentiments").is_file() and self.sentiment:
                     missing_files += 1
 
-                if not Path(self.path + "sentiments/c_sentiments").is_file() and self.sentiment:
+                if not Path(self.path + "/sentiments/c_sentiments").is_file() and self.sentiment:
                     missing_files += 1
 
-                if not Path(self.path + "sentiments/t_sentiments").is_file() and self.sentiment:
+                if not Path(self.path + "/sentiments/t_sentiments").is_file() and self.sentiment:
                     missing_files += 1
 
                 # if there are missing files, delete any partial record and parse again
                 if missing_files != 0:
                     print("Deleting partial record and parsing again")
 
-                    if Path(self.path + "votes/votes").is_file():
-                        shutil.rmtree(self.path + "votes")
+                    if Path(self.path + "/votes/votes").is_file():
+                        shutil.rmtree(self.path + "/votes")
 
-                    if Path(self.path + "author/author").is_file():
-                        shutil.rmtree(self.path + "author")
+                    if Path(self.path + "/author/author").is_file():
+                        shutil.rmtree(self.path + "/author")
 
-                    if Path(self.path + "sentiments/sentiments").is_file():
-                        shutil.rmtree(self.path + "sentiments")
+                    if Path(self.path + "/sentiments/sentiments").is_file():
+                        shutil.rmtree(self.path + "/sentiments")
 
                     if self.NN:  # for NN
-                        shutil.rmtree(self.path + "bert_prep")
+                        shutil.rmtree(self.path + "/bert_prep")
 
                     elif not self.NN:  # for LDA
-                        shutil.rmtree(self.path + "lda_prep")
+                        shutil.rmtree(self.path + "/lda_prep")
 
-                    if Path(self.path + "counts/RC_Count_List").is_file():
+                    if Path(self.path + "/counts/RC_Count_List").is_file():
                         shutil.rmtree(self.path + "counts")
 
-                    if Path(self.path + "timedict/RC_Count_Dict").is_file():
-                        shutil.rmtree(self.path + "timedict")
+                    if Path(self.path + "/timedict/RC_Count_Dict").is_file():
+                        shutil.rmtree(self.path + "/timedict")
 
                     # timer
                     print("Started parsing at " + time.strftime('%l:%M%p, %m/%d/%Y'))
                     self.parse(num_process)
 
         else:
-            if Path(self.path + "counts/RC_Count_List").is_file():
-                shutil.rmtree(self.path + "counts")
-            if Path(self.path + "votes/votes").is_file() and self.vote_counting:
-                shutil.rmtree(self.path + "votes")
-            if Path(self.path + "author/author").is_file() and self.author:
-                shutil.rmtree(self.path + "author")
-            if Path(self.path + "sentiments/sentiments").is_file() and self.sentiment:
-                shutil.rmtree(self.path + "sentiments")
-            if Path(self.path + "original_comm/original_comm").is_file() and self.write_original:
-                shutil.rmtree(self.path + "original_comm")
-            if Path(self.path + "original_indices/original_indices").is_file() and self.write_original:
-                shutil.rmtree(self.path + "original_indices")
+            if Path(self.path + "/counts/RC_Count_List").is_file():
+                shutil.rmtree(self.path + "/counts")
+            if Path(self.path + "/votes/votes").is_file() and self.vote_counting:
+                shutil.rmtree(self.path + "/votes")
+            if Path(self.path + "/author/author").is_file() and self.author:
+                shutil.rmtree(self.path + "/author")
+            if Path(self.path + "/sentiments/sentiments").is_file() and self.sentiment:
+                shutil.rmtree(self.path + "/sentiments")
+            if Path(self.path + "/original_comm/original_comm").is_file() and self.write_original:
+                shutil.rmtree(self.path + "/original_comm")
+            if Path(self.path + "/original_indices/original_indices").is_file() and self.write_original:
+                shutil.rmtree(self.path + "/original_indices")
 
             # timer
             print("Started parsing at " + time.strftime('%l:%M%p, %m/%d/%Y'))
@@ -956,7 +971,7 @@ class Parser(object):
 
             with open(self.path + "/counts/RC_Count_List", "w") as f:
                 for interval in timelist_original:
-                    print(interval, end="\n", file=f)
+                    print(int(interval), end="\n", file=f)
 
             # TODO: debug
             total_counter = 0
