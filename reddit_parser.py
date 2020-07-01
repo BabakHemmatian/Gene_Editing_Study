@@ -39,7 +39,7 @@ from keras.preprocessing.sequence import pad_sequences
 import hashlib
 import csv
 import shutil
-import ahocorasick
+
 
 ### Wrapper for the multi-processing parser
 
@@ -103,7 +103,7 @@ class Parser(object):
 
     def __init__(self, nlp_wrapper=StanfordCoreNLP('http://localhost:9000'),bert_tokenizer=BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True), clean_raw=CLEAN_RAW, dates=dates,
                  download_raw=DOWNLOAD_RAW, hashsums=None, NN=NN, data_path=data_path,
-                 model_path=model_path,legality=legality, marijuana=marijuana,
+                 model_path=model_path, genetic=genetic, engineering=engineering, disease=disease, 
                  stop=stop, write_original=WRITE_ORIGINAL,array=None,
                  vote_counting=vote_counting,author=author, sentiment=sentiment,
                  add_sentiment=add_sentiment,balanced_rel_sample=balanced_rel_sample,
@@ -133,9 +133,9 @@ class Parser(object):
         self.hashsums = hashsums
         self.NN = NN
         self.data_path = data_path
-        self.model_path = model_path
-        self.legality = legality
-        self.marijuana = marijuana
+        self.genetic = genetic
+        self.disease = disease
+        self.engineering = engineering
         self.stop = stop
         self.write_original = write_original
         self.vote_counting = vote_counting
@@ -408,34 +408,7 @@ class Parser(object):
                 sentiments.append(avg_score)
 
     @staticmethod
-    def is_relevant(text, automaton_marijuana, automaton_legal, regex_marijuana, regex_legal):
-        """
-        This function determines if a given comment is relevant (it mentions both marijuana and legal topics).
-        :param text: lower case text of a comment
-        :param automaton_marijuana: ahocorasick.Automaton object containing the marijuana key words
-        :param automaton_legal: ahocorasick.Automaton object containing the legal key words
-        :param regex_marijuana: a single regular expression
-        :param regex_legal: a single regular expression
-        :return: Boolean, True if text is relevant, False otherwise
-        """
-        for _ in automaton_marijuana.iter(text):
-            # note that we enter the loop only 1% of the time
-            for _ in automaton_legal.iter(text):
-                if not regex_marijuana.search(text) is None:
-                    # if the comment is marijuana relevant, check if it legal-relevant
-                    if not regex_legal.search(text) is None:
-                        return True
-                    else:
-                        # the comment is marijuana relevant, but not legal relevant
-                        return False
-                else:
-                    # the marijuana regex didn't match anything. So the comment is NOT relevant.
-                    return False
-            # the automaton_legal didn't find anything, so the comment is NOT relevant
-            return False
-        # the automaton_marijuana didn't find anything, so the comment is NOT relevant
-        return False
-
+   
     ## The main parsing function
     # NOTE: Parses for LDA if NN = False
     # NOTE: Saves the text of the non-processed comment to file as well if write_original = True
@@ -460,29 +433,7 @@ class Parser(object):
             if not Path(fns[file]).is_file():
                 missing_parsing_files.append(fns[file])
 
-        if len(missing_parsing_files) != 0:  # if the processed data is incpmplete
-
-                        # this will be used for efficient word searching
-            marijuana_keywords, legal_keywords = [], []
-            with open("alt_marijuana.txt", 'r') as f:
-                for line in f:
-                    marijuana_keywords.append(line.lower().rstrip("\n"))
-
-            with open("alt_legality.txt", 'r') as f:
-                for line in f:
-                    legal_keywords.append(line.lower().rstrip("\n"))
-
-            automaton_marijuana = ahocorasick.Automaton()
-            automaton_legal = ahocorasick.Automaton()
-
-            for idx, key in enumerate(marijuana_keywords):
-                automaton_marijuana.add_word(key, (idx, key))
-
-            for idx, key in enumerate(marijuana_keywords):
-                automaton_legal.add_word(key, (idx, key))
-
-            automaton_marijuana.make_automaton()
-            automaton_legal.make_automaton()
+        if len(missing_parsing_files) != 0:  # if the processed data is incomplete
 
             print("The following needed processed file(s) were missing for "
                   + str(year) + ", month " + str(month) + ":")
@@ -624,10 +575,9 @@ class Parser(object):
 
                 original_body = html.unescape(comment["body"])  # original text
 
-                is_relevant = Parser.is_relevant(original_body.lower(), automaton_marijuana, automaton_legal, marijuana[0], legality[0])
-
                 # filter comments by relevance to the topic according to regex
-                if is_relevant:
+                if any(not exp.search(original_body.lower()) is None for exp in genetic) and any(
+                        not exp.search(original_body.lower()) is None for exp in engineering) and any(not exp.search(original_body.lower()) is None for exp in disease):
 
                     # preprocess the comments
                     ## TODO is this for one comment or for all of the comments in a month?
