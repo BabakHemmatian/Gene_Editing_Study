@@ -34,19 +34,18 @@ Write_Performance()
 
 theparser = Parser()
 
-# create relevant subfolders for storing dataset details
-
+# create the relevant subfolders for storing dataset attributes
 theparser.safe_dir_create()
 
 theparser.Parse_Rel_RC_Comments()
 
-#if Neural_Relevance_Filtering:
+if Neural_Relevance_Filtering:
     # Use a transformer-based neural network trained on human ratings to prune the
     # dataset from irrelevant posts. Path will default to the Human_Ratings folder
-   # theparser.Neural_Relevance_Screen()
+    theparser.Neural_Relevance_Screen()
 
     # Needs results from Neural_Relevance_Screen
-   # theparser.Neural_Relevance_Clean()
+    theparser.Neural_Relevance_Clean()
 
 # Filter the dataset based on whether posts are in English (uses Google's
 # language detection)
@@ -65,8 +64,8 @@ theparser.lang_filtering()
 # NOTE: Make sure that Stanford CoreNLP's Python package is unzipped to the
 # same directory as this file and CoreNLP_server.py is also available before
 # running this function.
-#if add_sentiment:
-#   theparser.add_sentiment()
+# if add_sentiment:
+#     theparser.add_sentiment()
 
 ## call the function for calculating the percentage of relevant comments
 if calculate_perc_rel:
@@ -127,7 +126,9 @@ ldam.Get_Topic_Contribution()
 ldam.get_top_topics()
 
 ## Plot the temporal trends in the top topics and save it to the output path
-#ldam.Plotter("{}/Temporal_Trend-{}-{}-{}".format(ldam.output_path, "1hot" if one_hot_topic_contributions else "MLE", str(num_topics), "idf" if topic_idf else "f"))
+ldam.Plotter("{}/Temporal_Trend-{}-{}-{}".format(ldam.output_path,
+                                                 "1hot" if one_hot_topic_contributions else "MLE", str(num_topics),
+                                                 "idf" if topic_idf else "f"))
 
 ## Find the top words associated with top topics and write them to file
 with open("{}/top_words-{}".format(
