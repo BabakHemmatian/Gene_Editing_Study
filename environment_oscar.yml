@@ -1,4 +1,4 @@
-name: marijuana_study
+name: Gene_Study
 channels:
   - conda-forge
   - pytorch
