@@ -9,7 +9,6 @@
 import subprocess
 import time
 import sys
-from pycorenlp import StanfordCoreNLP
 from reddit_parser import Parser
 import argparse
 import numpy
