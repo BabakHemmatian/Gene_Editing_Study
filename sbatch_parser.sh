@@ -3,11 +3,11 @@
 # Default resources are 1 core with 2.8GB of memory per core.
 
 # job name:
-#SBATCH -J Gene_Editing_Parse
+#SBATCH -J Marij_Leg_Parse
 
 
 # email error reports
-#SBATCH --mail-user=noah_jones@brown.edu 
+#SBATCH --mail-user=babak_hemmatian@brown.edu 
 #SBATCH --mail-type=ALL
 
 # output file
@@ -20,13 +20,16 @@
 
 # Request runtime, memory, cores
 #SBATCH --time=48:00:00
-#SBATCH --mem=64G
-#SBATCH -c 4
+#SBATCH --mem=60G
+#SBATCH -c 8
 #SBATCH -N 1
-
-eval "$(conda shell.bash hook)"
-conda activate Gene_study
+#SBATCH --array=0-3
 
 machine='ccv'
 
-python Reddit_LDA_Analysis.py --machine $machine 
+eval "$(conda shell.bash hook)"
+conda deactivate
+conda activate marijuana_study
+
+export PYTHONUNBUFFERED=FALSE
+python Parse.py --machine $machine --array $SLURM_ARRAY_TASK_ID
