@@ -31,6 +31,7 @@ CLEAN_RAW = False # After parsing, delete the raw data file from disk if it was
 vote_counting = True # Record the fuzzed number of upvotes when parsing
 WRITE_ORIGINAL = True # Write original comments to file when parsing
 author = True # Write the username of each post's author to a separate file
+subreddit = True # Write the subreddit associated with each post to disk
 sentiment = False # Write sentence- and document-level sentiment of a post to
 # file (based on TextBlob and Vader)
 add_sentiment = False # Add CoreNLP sentiment values as a post-parsing step
