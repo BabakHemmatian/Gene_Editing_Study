@@ -356,58 +356,58 @@ class Parser(object):
     # NOTE: If add_sentiment == True, the averaging will happen through
     # add_sentiment() within NN_Book_Keeping.py
 
-    def write_avg_sentiment(self, original_body, month, main_counter, fns, v_sentiments=None,
-                            t_sentiments=None,sentiments=None):
-        sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
-        tokenized = sent_detector.tokenize(original_body)
+    #def write_avg_sentiment(self, original_body, month, main_counter, fns, v_sentiments=None,
+    #                        t_sentiments=None,sentiments=None):
+    #    sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
+    #    tokenized = sent_detector.tokenize(original_body)
 
-        total_vader = 0
-        total_textblob = 0
+    #    total_vader = 0
+    #    total_textblob = 0
 
-        if self.machine == "local":
-            with open(fns["v_sentiments"], "a+") as v_sentiments, open(fns["t_sentiments"], "a+") as t_sentiments:
-                for sentence in tokenized:
+    #    if self.machine == "local":
+    #        with open(fns["v_sentiments"], "a+") as v_sentiments, open(fns["t_sentiments"], "a+") as t_sentiments:
+    #            for sentence in tokenized:
                     # Vader score
-                    sid = SentimentIntensityAnalyzer()
-                    score_dict = sid.polarity_scores(sentence)
-                    total_vader += score_dict['compound']
-                    v_sentiments.write(str(score_dict['compound']) + ",")
+       #             sid = SentimentIntensityAnalyzer()
+       #             score_dict = sid.polarity_scores(sentence)
+       #             total_vader += score_dict['compound']
+       #             v_sentiments.write(str(score_dict['compound']) + ",")
 
                     # Get TextBlob sentiment
-                    blob = TextBlob(sentence)
-                    total_textblob += blob.sentiment[0]
-                    t_sentiments.write(str(blob.sentiment[0]) + ",")
-                v_sentiments.write("\n")
-                t_sentiments.write("\n")
+       #             blob = TextBlob(sentence)
+       #             total_textblob += blob.sentiment[0]
+       #             t_sentiments.write(str(blob.sentiment[0]) + ",")
+       #         v_sentiments.write("\n")
+       #         t_sentiments.write("\n")
 
-        elif self.machine == "ccv":
-            v_per_sentence = []
-            t_per_sentence = []
-            for sentence in tokenized:
+        #elif self.machine == "ccv":
+         #   v_per_sentence = []
+         #   t_per_sentence = []
+         #    for sentence in tokenized:
                 # Vader score
-                sid = SentimentIntensityAnalyzer()
-                score_dict = sid.polarity_scores(sentence)
-                total_vader += score_dict['compound']
-                v_per_sentence.append(str(score_dict['compound']))
+         #       sid = SentimentIntensityAnalyzer()
+         #       score_dict = sid.polarity_scores(sentence)
+         #       total_vader += score_dict['compound']
+         #       v_per_sentence.append(str(score_dict['compound']))
 
                 # Get TextBlob sentiment
-                blob = TextBlob(sentence)
-                total_textblob += blob.sentiment[0]
-                t_per_sentence.append(str(blob.sentiment[0]))
-            v_sentiments.append(",".join(v_per_sentence))
-            t_sentiments.append(",".join(t_per_sentence))
+         #       blob = TextBlob(sentence)
+         #       total_textblob += blob.sentiment[0]
+         #       t_per_sentence.append(str(blob.sentiment[0]))
+         #   v_sentiments.append(",".join(v_per_sentence))
+         #   t_sentiments.append(",".join(t_per_sentence))
 
-        avg_vader = total_vader / len(tokenized)
-        avg_blob = total_textblob / len(tokenized)
+        #avg_vader = total_vader / len(tokenized)
+        #avg_blob = total_textblob / len(tokenized)
 
-        if not self.add_sentiment:
-            avg_score = (avg_vader + avg_blob) / 2
-            if self.machine == "local":
-                print(avg_score, file=sentiments)
-            elif self.machine == "ccv":
-                sentiments.append(avg_score)
+        #if not self.add_sentiment:
+        #    avg_score = (avg_vader + avg_blob) / 2
+        #    if self.machine == "local":
+        #        print(avg_score, file=sentiments)
+        #    elif self.machine == "ccv":
+        #        sentiments.append(avg_score)
 
-    @staticmethod
+    #@staticmethod
    
     ## The main parsing function
     # NOTE: Parses for LDA if NN = False
