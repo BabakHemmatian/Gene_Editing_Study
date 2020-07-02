@@ -104,7 +104,7 @@ class Parser(object):
     def __init__(self, nlp_wrapper=StanfordCoreNLP('http://localhost:9000'),bert_tokenizer=BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True), clean_raw=CLEAN_RAW, dates=dates,
                  download_raw=DOWNLOAD_RAW, hashsums=None, NN=NN, data_path=data_path,
                  model_path=model_path, genetic=genetic, engineering=engineering, disease=disease, 
-                 stop=stop, write_original=WRITE_ORIGINAL,array=None,
+                 stop=stop, write_original=WRITE_ORIGINAL,array=None,subreddit=subreddit,
                  vote_counting=vote_counting,author=author, sentiment=sentiment,
                  add_sentiment=add_sentiment,balanced_rel_sample=balanced_rel_sample,
                  machine=None, on_file=on_file, num_process=num_process,
@@ -140,6 +140,7 @@ class Parser(object):
         self.write_original = write_original
         self.vote_counting = vote_counting
         self.author = author
+        self.subreddit = subreddit
         self.sentiment = sentiment
         self.add_sentiment = add_sentiment
         self.num_cores = num_cores
@@ -342,6 +343,8 @@ class Parser(object):
             fns["votes"] = "{}/votes/votes{}".format(self.model_path, suffix)
         if self.author:
             fns["author"] = "{}/author/author{}".format(self.model_path, suffix)
+        if self.subreddit:
+            fns["subreddit"] = "{}/subreddit/subreddit{}".format(self.model_path, suffix)
         if self.sentiment:
             fns["t_sentiments"] = "{}/t_sentiments/t_sentiments{}".format(self.model_path, suffix)
             fns["v_sentiments"] = "{}/v_sentiments/v_sentiments{}".format(self.model_path, suffix)
@@ -514,6 +517,15 @@ class Parser(object):
                 author = []
             elif self.author:
                 raise Exception("Machine specification variable not found.")
+                
+            # if we want to record the subreddit
+            if self.subreddit and self.machine == "local":
+                # create a file for storing whether a relevant comment has been upvoted or downvoted more often or neither
+                subreddit = open(fns["subreddit"], 'w')
+            elif self.subreddit and self.machine == "ccv":
+                subreddit = []
+            elif self.subreddit:
+                raise Exception("Machine specification variable not found.")
 
             if self.sentiment and self.machine == "local":
                 # docs for sentence-level sentiments of posts
@@ -632,15 +644,15 @@ class Parser(object):
                         # If calculating sentiment, write the average sentiment.
                         # Range is -1 to 1, with values below 0 meaning neg
                         # BUG: sentiment fn should be adjusted for local/ccv
-                        if self.sentiment and not self.add_sentiment:
-                            self.write_avg_sentiment(original_body,month,
-                                                    main_counter, fns,
-                                                    v_sentiments,t_sentiments,
-                                                    sentiments)
-                        elif self.sentiment:
-                            self.write_avg_sentiment(original_body,month,
-                                                    main_counter, fns,
-                                                    v_sentiments,t_sentiments)
+#                         if self.sentiment and not self.add_sentiment:
+#                             self.write_avg_sentiment(original_body,month,
+#                                                     main_counter, fns,
+#                                                     v_sentiments,t_sentiments,
+#                                                     sentiments)
+#                         elif self.sentiment:
+#                             self.write_avg_sentiment(original_body,month,
+#                                                     main_counter, fns,
+#                                                     v_sentiments,t_sentiments)
 
                         if self.machine == "local": # write comment-by-comment
                             # print the comment to file
@@ -671,6 +683,10 @@ class Parser(object):
                                 # write their username to file
                                 print(comment["author"].strip(),
                                       end="\n", file=author)
+                                
+                            # if we are interested in the subreddit of the posts
+                            if self.subreddit:
+                                print(comment["subreddit"].strip(),end="\n",file=subreddit)
 
                         elif self.machine == "ccv":
 
@@ -751,6 +767,13 @@ class Parser(object):
             elif self.author and self.machine == "ccv":
                 with open(fns["author"],'w') as f:
                     for element in author:
+                        f.write(str(element)+"\n")
+                        
+            if self.subreddit and self.machine == "local":
+                subreddit.close()
+            elif self.subreddit and self.machine == "ccv":
+                with open(fns["subreddit"],'w') as f:
+                    for element in subreddit:
                         f.write(str(element)+"\n")
 
             if self.sentiment and self.machine == "local":
