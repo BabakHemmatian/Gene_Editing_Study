@@ -883,7 +883,7 @@ class Parser(object):
                     for input in mpi_batch:
                         self.parse_one_month(input[0],input[1])
                     self.pool_parsing_data()
-                    self.lang_filtering() # filter non-English posts
+                    #self.lang_filtering() # filter non-English posts
 
                 else:
 
@@ -909,7 +909,7 @@ class Parser(object):
 
             # Pool parsing data from all files
             self.pool_parsing_data()
-            self.lang_filtering() # filter non-English posts
+            #self.lang_filtering() # filter non-English posts
 
         # timer
         print("Finished parsing at " + time.strftime('%l:%M%p, %m/%d/%Y'))
