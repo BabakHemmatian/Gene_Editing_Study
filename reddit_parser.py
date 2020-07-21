@@ -156,7 +156,7 @@ class Parser(object):
         self.rel_sample_num = rel_sample_num
         self.balanced_rel_sample = balanced_rel_sample
         self.Neural_Relevance_Filtering = Neural_Relevance_Filtering
-
+	self.model_path = model_path
     ## Download Reddit comment data
     def download(self, year=None, month=None, filename=None):
         assert not all([isinstance(year, type(None)),
