@@ -105,7 +105,7 @@ class Parser(object):
                  download_raw=DOWNLOAD_RAW, hashsums=None, NN=NN, data_path=data_path,
                  model_path=model_path, genetic=genetic, engineering=engineering, disease=disease, 
                  stop=stop, write_original=WRITE_ORIGINAL,array=None,subreddit=subreddit,
-                 vote_counting=vote_counting,author=author, sentiment=sentiment,
+                 vote_counting=vote_counting,author=author, sentiment=sentiment,calculate_perc_rel=calculate_perc_rel,
                  add_sentiment=add_sentiment,balanced_rel_sample=balanced_rel_sample,
                  machine=None, on_file=on_file, num_process=num_process,
                  rel_sample_num=rel_sample_num, num_cores=num_cores,
@@ -138,6 +138,7 @@ class Parser(object):
         self.engineering = engineering
         self.stop = stop
         self.write_original = write_original
+        self.calculate_perc_rel = calculate_perc_rel
         self.vote_counting = vote_counting
         self.author = author
         self.subreddit = subreddit
@@ -331,14 +332,15 @@ class Parser(object):
         fns = dict((("original_comm", "{}/original_comm/original_comm{}".format(self.model_path, suffix)),
                     ("original_indices", "{}/original_indices/original_indices{}".format(self.model_path, suffix)),
                     ("counts", "{}/counts/RC_Count_List{}".format(self.model_path, suffix)),
-                    ("timedict", "{}/timedict/RC_Count_Dict{}".format(self.model_path, suffix)),
-                    ("total_count", "{}/total_count/total_count{}".format(self.model_path, suffix))
+                    ("timedict", "{}/timedict/RC_Count_Dict{}".format(self.model_path, suffix))
                     ))
         if self.NN:
             # fns["nn_prep"] = "{}/nn_prep/nn_prep{}".format(self.model_path, suffix)
             fns["bert_prep"] = "{}/bert_prep/bert_prep{}.json".format(self.model_path, suffix)
         else:
             fns["lda_prep"] = "{}/lda_prep/lda_prep{}".format(self.model_path, suffix)
+        if self.calculate_perc_rel:
+            fns["total_count"] = "{}/total_count/total_count{}".format(self.model_path, suffix)
         if self.vote_counting:
             fns["votes"] = "{}/votes/votes{}".format(self.model_path, suffix)
         if self.author:
