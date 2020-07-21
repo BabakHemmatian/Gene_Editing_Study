@@ -197,7 +197,7 @@ file_path = os.path.abspath(__file__)
 model_path = os.path.dirname(file_path)
 # For the neural filtering
 rel_model_path = model_path+"/Human_Ratings/1_1/full_1005/"
-data_path = '/users/ssloman/data/Reddit_Dataset/'
+data_path = model_path
 # NOTE: if not fully available on file, set Download for Parser function to
 # True (source: http://files.pushshift.io/reddit/comments/)
 # NOTE: if not in the same directory as this file, change the path variable
