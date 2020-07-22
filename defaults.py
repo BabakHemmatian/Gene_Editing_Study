@@ -64,7 +64,7 @@ NN_training_fraction = 0.80 # fraction of the data that is used for training
 # divided randomly and equally into evaluation and test sets
 calculate_perc_rel = False # whether the percentage of relevant comments from
 # each year should be calculated and written to file
-num_process = 3 # the number of parallel processes to be executed for parsing
+num_process = 1 # the number of parallel processes to be executed for parsing
 # NOTE: Uses Python's multiprocessing package
 Neural_Relevance_Filtering = False # The dataset will be cleaned from posts
 # irrelevant to the topic using a pre-trained neural network model.
@@ -241,7 +241,7 @@ else: # if doing topic modeling
 
     # Force this import so output_path is correctly set
     from lda_config import ENTIRE_CORPUS
-    output_path = path + "/LDA_"+str(ENTIRE_CORPUS)+"_"+str(num_topics)
+    output_path = model_path  + "/LDA_"+str(ENTIRE_CORPUS)+"_"+str(num_topics)
 
 ### Preprocessing ###
 

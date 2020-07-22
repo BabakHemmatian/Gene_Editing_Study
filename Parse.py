@@ -30,7 +30,7 @@ subprocess.Popen(
     shell=True, cwd="./stanford-corenlp-4.0.0")
 time.sleep(5)  # wait for connection to the server to be established
 
-theparser=Parser(array=args.array,machine=args.machine)
+theparser=Parser(machine="local")
 
 # Create relevant folders
 theparser.safe_dir_create()
