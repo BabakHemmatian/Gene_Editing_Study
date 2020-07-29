@@ -31,7 +31,7 @@ CLEAN_RAW = False # After parsing, delete the raw data file from disk if it was
 vote_counting = True # Record the fuzzed number of upvotes when parsing
 WRITE_ORIGINAL = True # Write original comments to file when parsing
 author = True # Write the username of each post's author to a separate file
-subreddit = True # Write the subreddit associated with each post to disk
+subreddit = False # Write the subreddit associated with each post to disk
 sentiment = False # Write sentence- and document-level sentiment of a post to
 # file (based on TextBlob and Vader)
 add_sentiment = False # Add CoreNLP sentiment values as a post-parsing step
@@ -197,7 +197,7 @@ file_path = os.path.abspath(__file__)
 model_path = os.path.dirname(file_path)
 # For the neural filtering
 rel_model_path = model_path+"/Human_Ratings/1_1/full_1005/"
-data_path = model_path
+data_path = model_path+"/"
 # NOTE: if not fully available on file, set Download for Parser function to
 # True (source: http://files.pushshift.io/reddit/comments/)
 # NOTE: if not in the same directory as this file, change the path variable
@@ -205,8 +205,8 @@ data_path = model_path
 
 ## Year/month combinations to get Reddit data for
 dates=[] # initialize a list to contain the year, month tuples
-months=range(1,13) # month range
-years=range(2008,2020) # year range
+months=range(12,13) # month range
+years=range(2019,2020) # year range
 for year in years:
     for month in months:
         dates.append((year,month))
