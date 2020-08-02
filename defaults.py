@@ -14,7 +14,7 @@ import numpy as np
 
 ### Data management hyperparameters
 
-NN = False # Set to False for LDA, to true for neural network classification
+NN = True # Set to False for LDA, to true for neural network classification
 ENTIRE_CORPUS = True # Are we using a random subset of comments, or the whole
 # dataset? The names of model files and output directories will include the
 # value of this variable (e.g. the default LDA output directory label is
@@ -31,10 +31,9 @@ CLEAN_RAW = False # After parsing, delete the raw data file from disk if it was
 vote_counting = True # Record the fuzzed number of upvotes when parsing
 WRITE_ORIGINAL = True # Write original comments to file when parsing
 author = True # Write the username of each post's author to a separate file
-subreddit = True # Write the subreddit associated with each post to disk
-sentiment = False # Write sentence- and document-level sentiment of a post to
+sentiment = True # Write sentence- and document-level sentiment of a post to
 # file (based on TextBlob and Vader)
-add_sentiment = False # Add CoreNLP sentiment values as a post-parsing step
+add_sentiment = True # Add CoreNLP sentiment values as a post-parsing step
 # NOTE: Make sure that Stanford CoreNLP's Python package is unzipped to the
 # same directory as this file and CoreNLP_server.py is also available before
 # running this function.
@@ -62,11 +61,11 @@ training_fraction = 0.99 # what percentage of data will be used for learning the
 NN_training_fraction = 0.80 # fraction of the data that is used for training
 # the neural network.[1 - training_fraction] fraction of the dataset will be
 # divided randomly and equally into evaluation and test sets
-calculate_perc_rel = False # whether the percentage of relevant comments from
+calculate_perc_rel = True # whether the percentage of relevant comments from
 # each year should be calculated and written to file
 num_process = 3 # the number of parallel processes to be executed for parsing
 # NOTE: Uses Python's multiprocessing package
-Neural_Relevance_Filtering = False # The dataset will be cleaned from posts
+Neural_Relevance_Filtering = True # The dataset will be cleaned from posts
 # irrelevant to the topic using a pre-trained neural network model.
 # NOTE: Needs results of parsing for the same dates with WRITE_ORIGINAL==True
 # NOTE: Requires a pre-trained simpletransformers model. One such model trained
@@ -81,6 +80,14 @@ balanced_rel_sample = True # whether the random filtering sample should be
 eval_relevance = False # F1, recall, precision and accuracy for the sample derived
 # from Neural_Relevance_Filtering. Requires the sample to be complemented by
 # manual labels. The default location for the sample is
+# [repository path]/auto_labels/sample_auto_labeled.csv
+# NOTE: Set to false if you intend to extract the relevance sample, since the produced
+# files will be empty of human judgments and eval_relevance results nonsensical
+num_annot = 3 # number of relevance annotators. Used to divide [rel_sample_num]
+# documents evenly between the annotators with specified overlap
+# NOTE: [rel_sample_num] should be divisible by this number
+overlap = 0.2 # degree of overlap between annotators. Multiplying [rel_sample_num]
+# by this should result in an integer
 
 # [repository path]/original_comm/sample_auto_labeled.csv
 
@@ -93,12 +100,12 @@ n_random_comments = 1500 # number of comments to sample from each year for
 iterations = 1000 # number of times LDA posterior distributions will be sampled
 num_threads = 5 # number of threads used for parallelized processing of comments
 # Only matters if using _Threaded functions
-num_topics = 50 # number of topics to be generated in each LDA sampling
-alpha = 0.1 # determines how many high probability topics will be assigned to a
+num_topics = 100 # number of topics to be generated in each LDA sampling
+alpha = 'auto' # determines how many high probability topics will be assigned to a
 # document in general (not to be confused with NN l2regularization constant)
 minimum_probability = 0.01 # minimum acceptable probability for an output topic
 # across corpus
-eta = 0.1 # determines how many high probability words will be assigned to a
+eta = 'auto' # determines how many high probability words will be assigned to a
 # topic in general
 minimum_phi_value = 0.01 # determines the lower bound on per-term topic
 # probability. Only matters if per_word_topics = True.
@@ -175,18 +182,18 @@ sample_topics = 0.2 # proportion of topics that will be selected for reporting
 # NOTE: Must be a valid proportion (not None) if topic_idf = True
 top_topic_thresh = None # threshold for proportion contribution to the corpus
 # determining topics to report. Only matters if topic_idf = False
-topn = 20 # the number of high-probability words for each topic to be exported
+topn = 80 # the number of high-probability words for each topic to be exported
 # NOTE: Many of the words will inevitably be high probability general
 # non-content and non-framing words. So topn should be set to significantly
 # higher than the number of relevant words you wish to see
-sample_comments = 5 # number of comments that will be sampled from top topics
+sample_comments = 25 # number of comments that will be sampled from top topics
 min_comm_length = 20 # the minimum acceptable number of words in a sampled
 # comment. Set to None for no length filtering
 # Determines how topic contributions are calculated. When set to True, the
 # topic of each word is set to be simply the most probable topic. When False,
 # the topic of each word is set to the entire probability distribution over
 # num_topics topics.
-num_pop = None # number of the most up- or down-voted comments sampled for model
+num_pop = 2000 # number of the most up- or down-voted comments sampled for model
 # comparison. Set to None for no sampling. Needs data parsed with
 # write_original = True
 
@@ -197,7 +204,7 @@ file_path = os.path.abspath(__file__)
 model_path = os.path.dirname(file_path)
 # For the neural filtering
 rel_model_path = model_path+"/Human_Ratings/1_1/full_1005/"
-data_path = model_path
+data_path = '/users/ssloman/data/Reddit_Dataset/'
 # NOTE: if not fully available on file, set Download for Parser function to
 # True (source: http://files.pushshift.io/reddit/comments/)
 # NOTE: if not in the same directory as this file, change the path variable
@@ -257,21 +264,19 @@ for word in set(nltk.corpus.stopwords.words('english')):
 
 ### Define the regex filter used for finding relevant comments
 
-# get the list of relevant words from disk
-regex_iteration = "2" 
 
-engineering = []
-with open("engineering_" + regex_iteration + ".txt", 'r') as f: 
-    for line in f: 
-        engineering.append(re.compile(line.lower().strip()))
+legality_reg_expressions = []
+with open("legality.txt",'r') as f:
+    for line in f:
+        legality_reg_expressions.append(line.lower().strip())
 
-genetic = []
-with open("genetic_" + regex_iteration + ".txt", 'r') as f:
-    for line in f: 
-        genetic.append(re.compile(line.lower().strip())) 
+legality = [re.compile("|".join(legality_reg_expressions))]
 
-disease = []
-with open("disease_" + regex_iteration + ".txt", 'r') as f: 
-    for line in f: 
-        disease.append(re.compile(line.lower().strip()))
+# get the list of words relevant to marijuana from disk
+# (requires marijuana.txt be located in the same directory)
+marijuana_reg_expressions = []
+with open("marijuana.txt",'r') as f:
+    for line in f:
+        marijuana_reg_expressions.append(line.lower().strip())
 
+marijuana = [re.compile("|".join(marijuana_reg_expressions))]
