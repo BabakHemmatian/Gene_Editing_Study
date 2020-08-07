@@ -203,7 +203,7 @@ num_pop = None # number of the most up- or down-voted comments sampled for model
 file_path = os.path.abspath(__file__)
 model_path = os.path.dirname(file_path)
 # For the neural filtering
-rel_model_path = model_path+"/Human_Ratings/1_1/full_1005/"
+rel_model_path = model_path+"/Human_Ratings/full_774/"
 data_path = model_path
 # NOTE: if not fully available on file, set Download for Parser function to
 # True (source: http://files.pushshift.io/reddit/comments/)
