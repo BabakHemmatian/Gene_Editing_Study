@@ -104,7 +104,7 @@ class Parser(object):
 
     def __init__(self, nlp_wrapper=StanfordCoreNLP('http://localhost:9000'),bert_tokenizer=BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True), clean_raw=CLEAN_RAW, dates=dates,
                  download_raw=DOWNLOAD_RAW, hashsums=None, NN=NN, data_path=data_path,
-                 model_path=model_path,legality=legality, marijuana=marijuana,
+                 model_path=model_path,genetic=genetic, engineering=engineering, disease=disease,
                  stop=stop, write_original=WRITE_ORIGINAL,array=None,calculate_perc_rel=calculate_perc_rel,
                  vote_counting=vote_counting,author=author, sentiment=sentiment,
                  add_sentiment=add_sentiment,balanced_rel_sample=balanced_rel_sample,
@@ -135,8 +135,9 @@ class Parser(object):
         self.NN = NN
         self.data_path = data_path
         self.model_path = model_path
-        self.legality = legality
-        self.marijuana = marijuana
+        self.disease = disease
+        self.engineering = engineering
+        self.genetic = genetic
         self.stop = stop
         self.write_original = write_original
         self.calculate_perc_rel = calculate_perc_rel
