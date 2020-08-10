@@ -33,7 +33,7 @@ WRITE_ORIGINAL = True # Write original comments to file when parsing
 author = True # Write the username of each post's author to a separate file
 sentiment = False # Write sentence- and document-level sentiment of a post to
 # file (based on TextBlob and Vader)
-add_sentiment = True # Add CoreNLP sentiment values as a post-parsing step
+add_sentiment = False # Add CoreNLP sentiment values as a post-parsing step
 # NOTE: Make sure that Stanford CoreNLP's Python package is unzipped to the
 # same directory as this file and CoreNLP_server.py is also available before
 # running this function.
@@ -48,10 +48,10 @@ num_cores = 4 # Number of threads for sentence-by-sentence parallelization of
 # NOTE: Matters for optimization of the parallelizations used in the functions.
 # NOTE: On Brown University's supercomputer, batches of 24 months were found to
 # be optimal
-MaxVocab = 2000000 # maximum size of the vocabulary
+MaxVocab = 200000 # maximum size of the vocabulary
 FrequencyFilter = 1 # tokens with a frequency equal or less than this number
 # will be filtered out of the corpus (when NN=True)
-no_below = 5 # tokens that appear in less than this number of documents in
+no_below = 2 # tokens that appear in less than this number of documents in
 # corpus will be filtered out (when NN=False, i.e. for the LDA model)
 no_above = 0.99 # tokens that appear in more than this fraction of documents in
 # corpus will be filtered out
@@ -61,11 +61,11 @@ training_fraction = 0.99 # what percentage of data will be used for learning the
 NN_training_fraction = 0.80 # fraction of the data that is used for training
 # the neural network.[1 - training_fraction] fraction of the dataset will be
 # divided randomly and equally into evaluation and test sets
-calculate_perc_rel = False # whether the percentage of relevant comments from
+calculate_perc_rel = True # whether the percentage of relevant comments from
 # each year should be calculated and written to file
 num_process = 3 # the number of parallel processes to be executed for parsing
 # NOTE: Uses Python's multiprocessing package
-Neural_Relevance_Filtering = False # The dataset will be cleaned from posts
+Neural_Relevance_Filtering = True # The dataset will be cleaned from posts
 # irrelevant to the topic using a pre-trained neural network model.
 # NOTE: Needs results of parsing for the same dates with WRITE_ORIGINAL==True
 # NOTE: Requires a pre-trained simpletransformers model. One such model trained
