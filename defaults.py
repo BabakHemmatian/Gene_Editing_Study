@@ -31,10 +31,9 @@ CLEAN_RAW = False # After parsing, delete the raw data file from disk if it was
 vote_counting = True # Record the fuzzed number of upvotes when parsing
 WRITE_ORIGINAL = True # Write original comments to file when parsing
 author = True # Write the username of each post's author to a separate file
-subreddit = False # Write the subreddit associated with each post to disk
 sentiment = False # Write sentence- and document-level sentiment of a post to
 # file (based on TextBlob and Vader)
-add_sentiment = False # Add CoreNLP sentiment values as a post-parsing step
+add_sentiment = True # Add CoreNLP sentiment values as a post-parsing step
 # NOTE: Make sure that Stanford CoreNLP's Python package is unzipped to the
 # same directory as this file and CoreNLP_server.py is also available before
 # running this function.
@@ -64,7 +63,7 @@ NN_training_fraction = 0.80 # fraction of the data that is used for training
 # divided randomly and equally into evaluation and test sets
 calculate_perc_rel = False # whether the percentage of relevant comments from
 # each year should be calculated and written to file
-num_process = 1 # the number of parallel processes to be executed for parsing
+num_process = 3 # the number of parallel processes to be executed for parsing
 # NOTE: Uses Python's multiprocessing package
 Neural_Relevance_Filtering = False # The dataset will be cleaned from posts
 # irrelevant to the topic using a pre-trained neural network model.
@@ -81,6 +80,14 @@ balanced_rel_sample = True # whether the random filtering sample should be
 eval_relevance = False # F1, recall, precision and accuracy for the sample derived
 # from Neural_Relevance_Filtering. Requires the sample to be complemented by
 # manual labels. The default location for the sample is
+# [repository path]/auto_labels/sample_auto_labeled.csv
+# NOTE: Set to false if you intend to extract the relevance sample, since the produced
+# files will be empty of human judgments and eval_relevance results nonsensical
+num_annot = 3 # number of relevance annotators. Used to divide [rel_sample_num]
+# documents evenly between the annotators with specified overlap
+# NOTE: [rel_sample_num] should be divisible by this number
+overlap = 0.2 # degree of overlap between annotators. Multiplying [rel_sample_num]
+# by this should result in an integer
 
 # [repository path]/original_comm/sample_auto_labeled.csv
 
@@ -194,10 +201,10 @@ num_pop = None # number of the most up- or down-voted comments sampled for model
 
 ## where the data is
 file_path = os.path.abspath(__file__)
-model_path = os.path.dirname(file_path)
+model_path = os.path.dirname(file_path) + "/"
 # For the neural filtering
-rel_model_path = model_path+"/Human_Ratings/1_1/full_1005/"
-data_path = model_path+"/"
+rel_model_path = model_path+"/Human_Ratings/full_774/"
+data_path = model_path
 # NOTE: if not fully available on file, set Download for Parser function to
 # True (source: http://files.pushshift.io/reddit/comments/)
 # NOTE: if not in the same directory as this file, change the path variable
@@ -205,8 +212,8 @@ data_path = model_path+"/"
 
 ## Year/month combinations to get Reddit data for
 dates=[] # initialize a list to contain the year, month tuples
-months=range(12,13) # month range
-years=range(2019,2020) # year range
+months=range(1,13) # month range
+years=range(2008,2020) # year range
 for year in years:
     for month in months:
         dates.append((year,month))
@@ -241,7 +248,7 @@ else: # if doing topic modeling
 
     # Force this import so output_path is correctly set
     from lda_config import ENTIRE_CORPUS
-    output_path = model_path  + "/LDA_"+str(ENTIRE_CORPUS)+"_"+str(num_topics)
+    output_path = model_path + "/LDA_"+str(ENTIRE_CORPUS)+"_"+str(num_topics)
 
 ### Preprocessing ###
 
@@ -257,7 +264,6 @@ for word in set(nltk.corpus.stopwords.words('english')):
 
 ### Define the regex filter used for finding relevant comments
 
-# get the list of relevant words from disk
 regex_iteration = "2" 
 
 engineering = []
@@ -269,9 +275,8 @@ genetic = []
 with open("genetic_" + regex_iteration + ".txt", 'r') as f:
     for line in f: 
         genetic.append(re.compile(line.lower().strip())) 
-
+        
 disease = []
 with open("disease_" + regex_iteration + ".txt", 'r') as f: 
     for line in f: 
         disease.append(re.compile(line.lower().strip()))
-
