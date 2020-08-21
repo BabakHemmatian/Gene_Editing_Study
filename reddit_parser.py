@@ -104,11 +104,11 @@ class Parser(object):
 
     def __init__(self, nlp_wrapper=StanfordCoreNLP('http://localhost:9000'),bert_tokenizer=BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True), clean_raw=CLEAN_RAW, dates=dates,
                  download_raw=DOWNLOAD_RAW, hashsums=None, NN=NN, data_path=data_path,
-                 model_path=model_path,genetic=genetic, engineering=engineering, disease=disease, 
+                 model_path=model_path,genetic=genetic, engineering=engineering, disease=disease,
                  stop=stop, write_original=WRITE_ORIGINAL,array=None,calculate_perc_rel=calculate_perc_rel,
                  vote_counting=vote_counting,author=author, sentiment=sentiment,
                  add_sentiment=add_sentiment,balanced_rel_sample=balanced_rel_sample,
-                 machine=None, on_file=on_file, num_process=num_process,
+                 machine="local", on_file=on_file, num_process=num_process,
                  rel_sample_num=rel_sample_num, num_cores=num_cores,num_annot=num_annot,
                  Neural_Relevance_Filtering=Neural_Relevance_Filtering):
         # check input arguments for valid type
@@ -135,9 +135,9 @@ class Parser(object):
         self.NN = NN
         self.data_path = data_path
         self.model_path = model_path
-        self.genetic = genetic
         self.disease = disease
         self.engineering = engineering
+        self.genetic = genetic
         self.stop = stop
         self.write_original = write_original
         self.calculate_perc_rel = calculate_perc_rel
@@ -158,7 +158,6 @@ class Parser(object):
         self.rel_sample_num = rel_sample_num
         self.balanced_rel_sample = balanced_rel_sample
         self.Neural_Relevance_Filtering = Neural_Relevance_Filtering
-        self.model_path = model_path
 
     ### calculate the yearly relevant comment counts
     def Get_Counts(self,model_path=model_path, random=False, frequency="monthly"):
@@ -490,6 +489,43 @@ class Parser(object):
             return False
         # the automaton_marijuana didn't find anything, so the comment is NOT relevant
         return False
+
+    def LDA_Prep(self):
+
+        if not Path(self.model_path + "/original_comm/original_comm").is_file():
+            raise Exception('Original comments could not be found')
+        for yr,mo in self.dates:
+            if not Path(self.model_path + "/original_comm/original_comm-{}-{}".format(yr,mo)).is_file():
+                raise Exception('Monthly original comments could not be found.')
+        if not os.path.exists(self.model_path + "/lda_prep/"):
+            print("Creating directories to store the additional sentiment output")
+            os.makedirs(self.model_path + "/lda_prep")
+
+        empty_counter = 0
+        for yr,mo in self.dates:
+            with open(self.model_path + "/original_comm/original_comm-{}-{}".format(yr,mo),"r") as fin, open(self.model_path + "/lda_prep/lda_prep-{}-{}".format(yr,mo),"w") as fout, open(self.model_path + "/lda_prep/lda_prep","a+") as general:
+                for line in fin:  # for each comment
+                    original_body = line.strip()
+                    # clean the text for LDA
+                    body = self.LDA_clean(original_body)
+
+                    if body.strip() == "":  # if the comment is not empty after preprocessing
+                        empty_counter += 1
+                        print("",end="\n", file = general)
+                        print("",end="\n", file = fout)
+                    else:
+                        # remove mid-comment lines
+                        body = body.replace("\n", "")
+                        body = " ".join(body.split())
+
+                        # print the comment to file
+                        print(body, sep=" ", end="\n", file=general)
+                        print(body, sep=" ", end="\n", file=fout)
+
+                # timer
+                print("Finished parsing month {} of year {}".format(mo,yr)+ "at " + time.strftime('%l:%M%p, %m/%d/%Y'))
+
+        print("Warning! {} documents became empty after preprocessing.".format(empty_counter))
 
     ## The main parsing function
     # NOTE: Parses for LDA if NN = False
@@ -1393,7 +1429,7 @@ class Parser(object):
 
     ### Uses a pre-trained neural network to identify irrelevant posts in the
     # dataset from a particular month
-    def Screen_One_Month(self, year, month, batch_size=None):
+    def Screen_One_Month(self, year, month, batch_size=1200):
 
         # set up neural network runtime configurations
         logging.basicConfig(level=logging.INFO)
@@ -1401,7 +1437,7 @@ class Parser(object):
         transformers_logger.setLevel(logging.WARNING)
 
         # load the pre-trained neural network from model_path
-        model = ClassificationModel('roberta', rel_model_path, use_cuda=False,
+        model = ClassificationModel('roberta', rel_model_path, use_cuda=False, num_labels= 3,
                                     args={'fp16': False, 'num_train_epochs': 1, 'manual_seed': 1, 'silent': True})
 
         total_count = 0  # counter for all documents in the dataset
@@ -1464,7 +1500,7 @@ class Parser(object):
     ### Runs Screen_One_Month either sequentially or in batches for all months
     # in dates, and aggregates the output
     def Neural_Relevance_Screen(self, rel_model_path=rel_model_path, dates=dates,
-                                rel_sample_num=rel_sample_num, batch_size=None):
+                                rel_sample_num=rel_sample_num, batch_size=1200):
 
         total_count = 0
 
@@ -1519,8 +1555,7 @@ class Parser(object):
         # check for previous screening results
         if Path(self.model_path + "/auto_labels/sample_labeled-{}-{}.csv".format(rel_sample_num,balanced_rel_sample)).is_file():
 
-            print(
-                "A sample of auto-labeled posts was found, suggesting neural relevance screening was previously performed. Moving on.")
+            print("Relevance sampled found on file. Moving on.")
 
         else:  # if screening results not found
 
@@ -1534,7 +1569,6 @@ class Parser(object):
                         if line.strip() != "":
                             timelist_original.append(int(line))
             total_count = timelist_original[-1]
-            print(total_count)
 
             inputs = [(year, month, self.on_file, self.__dict__) for year, month in self.dates]
 
@@ -1658,7 +1692,7 @@ class Parser(object):
                 assert len(element) == 4
 
             # write the sampled files to a csvfile
-            with open(self.model_path + "/auto_labels/auto_labels/sample_labeled-{}-{}.csv".format(rel_sample_num,balanced_rel_sample), 'a+') as csvfile:
+            with open(self.model_path + "/auto_labels/sample_labeled-{}-{}.csv".format(rel_sample_num,balanced_rel_sample), 'a+') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerow(['year', 'month', 'text', 'auto label'])
                 for document in sampled_docs:
@@ -1723,53 +1757,28 @@ class Parser(object):
             start = time.time()  # start a clock for processing time
 
             # load negative or unknown labels for the dataset from disk
-
-            int_counter = 0  # counter for the time period an index belongs to
-
-            # counters for the number of irrelevant posts from each time period
-            int_non_rel = np.zeros(len(timelist_original) + 1)
-
-            # counters for the number of irrelevant posts from each file
-            file_non_rel = np.zeros_like(timelist_original)
-
             general_counter = 0  # counter for all comments
-            file_counter = 0  # counter for comments in a monthly file
             negative_labels = []  # list for negative labels
 
             for yr, mo in dates:  # for each month
                 with open(model_path + "/auto_labels/auto_labels-{}-{}".format(yr, mo), "r") as labels:
                     for idx, line in enumerate(labels):
                         if line.strip() != "":
-
-                            try:
-                                if general_counter > timelist_original[int_counter]:
-                                    int_counter += 1  # try to update month counter as needed
-                                # if label was 0 or there was an error in labeling, remove
-                                if line.strip() == "None" or line.strip() == "0":
-                                    negative_labels.append(general_counter)  # add index
-                                    int_non_rel[int_counter] += 1  # update counter
-                                    file_non_rel[file_counter] += 1  # update counter
-
-                            except:  # if the date of the post is out of bounds for the file,
-                                # ignored the requirement to update the monthly counter
-                                # if label was 0 or there was an error in labeling, remove
-                                if line.strip() == "None" or line.strip() == "0":
-                                    negative_labels.append(general_counter)  # add index
-                                    int_non_rel[int_counter + 1] += 1  # update counter
-                                    file_non_rel[file_counter] += 1  # update counter
+                            # if label was 0 or there was an error in labeling, remove
+                            if line.strip() == "None" or line.strip() == "0":
+                                negative_labels.append(general_counter)  # add index
 
                             general_counter += 1  # update
-
-                file_counter += 1  # update
 
             # Filter the posts
 
             # BUG: I'm not filtering bert_prep. It's okay as long as we don't use it
+            # BUG: Hacky solution that only works for consecutive months/years
 
             # A list of dataset files needing to be updated based on parameters
             filenames = ['/original_comm/original_comm', '/original_indices/original_indices',
                          '/auto_labels/auto_labels']
-            if not self.NN:
+            if not self.NN or Path(self.model_path + "/lda_prep/lda_prep").is_file():
                 filenames.append("/lda_prep/lda_prep")
             if self.vote_counting:
                 filenames.append("/votes/votes")
@@ -1783,61 +1792,42 @@ class Parser(object):
             if Path(self.model_path + "/subreddit/subreddit").is_file():
                 filenames.append("/subreddit/subreddit")
 
-            for file in filenames:  # for each file in the list above
-
-                with open(self.model_path + file, "r") as f:  # read each line
-                    lines = f.readlines()
-                with open(self.model_path + file, "w") as f:  # write only the relevant posts
-                    for index, line in enumerate(lines):
-                        if line.strip() != "" and index not in negative_labels:
-                            f.write(line)
-
+            for idx,file in enumerate(filenames):  # for each file in the list above
+                monthly_counter = []
+                counter = 0
                 for yr, mo in self.dates:
+                    monthly_count = 0
                     with open(self.model_path + file + "-{}-{}".format(yr, mo), "r") as monthly_file:
                         lines = monthly_file.readlines()
                     with open(self.model_path + file + "-{}-{}".format(yr, mo), "w") as monthly_file:
-                        for index, line in enumerate(lines):
-                            if line.strip() != "" and index not in negative_labels:
-                                monthly_file.write(line)
+                        for line in lines:
+                            if counter not in negative_labels:
+                                print(line.strip(),end="\n",file=monthly_file)
+                                monthly_count += 1
+                            counter += 1
+                    if idx == 0:
+                        monthly_counter.append(monthly_count)
 
-            # update document counts for each time interval in the dataset
-            running_tot_count = 0
-            for interval, count in enumerate(timelist_original):
-                running_tot_count += int_non_rel[interval]
-                timelist_original[interval] = timelist_original[interval] - running_tot_count
+                for yr, mo in self.dates:
+                    with open(self.model_path + file + "-{}-{}".format(yr, mo), "r") as monthly_file, open(self.model_path + file, "a+") as f:  # write only the relevant posts
+                        for line in monthly_file:
+                            print(line.strip(),end="\n",file=f)
 
-            # get the actual post count (might be different from the list above
-            # because of out-of-bounds posts, for which an additional entry will
-            # be appended to the count list)
-            with open(model_path + '/original_comm/original_comm', 'r') as f:
-                total_count = 0
-                for line in f:
-                    total_count += 1
-                if not timelist_original[-1] == total_count:
-                    timelist_original.append(total_count)
+                print("Successfully finished cleaning {} and the relevant monthly files at {}.".format(file,time.strftime('%l:%M%p, %m/%d/%Y')))
 
             # update the cumulative monthly counts
+            cumul_count = 0
             with open(self.model_path + "/counts/RC_Count_List", "w") as f:
-                for interval in timelist_original:
-                    print(str(int(interval)), end="\n", file=f)
+                for month in monthly_counter:
+                    cumul_count += month
+                    print(str(cumul_count), end="\n", file=f)
 
             # fix monthly file counts
-            total_counter = 0
-            for yr, mo in dates:
-                file_counter = 0
-                interval_counter = 0
-                with open(self.model_path + "/counts/RC_Count_List-{}-{}".format(yr, mo), "r") as f:
-                    for line in f:
-                        if line.strip() != "":
-                            file_counter = int(line.strip())
-
-                for index in negative_labels:
-                    if index >= total_counter and index < total_counter + file_counter:
-                        interval_counter += 1
-                total_counter += int(line.strip())
+            for idx,date in enumerate(dates):
+                yr = date[0]
+                mo = date[1]
                 with open(self.model_path + "/counts/RC_Count_List-{}-{}".format(yr, mo), "w") as f:
-                    new_count = file_counter - interval_counter
-                    f.write(str(new_count))
+                    print(str(monthly_count[idx]),end="\n",file=f)
 
             # update the auto-labels file and check that all negative comments
             # are removed from the dataset
@@ -1850,6 +1840,16 @@ class Parser(object):
                         sum_auto_labels += int(line.strip())
             assert count_auto_labels == sum_auto_labels
 
+            for yr,mo in dates:
+                count_auto_labels = 0
+                sum_auto_labels = 0
+                with open(model_path + "/auto_labels/auto_labels-{}-{}".format(yr, mo), "r") as labels:
+                    for line in labels:
+                        if line.strip() != "":
+                            count_auto_labels += 1
+                            sum_auto_labels += int(line.strip())
+                assert count_auto_labels == sum_auto_labels
+
             # Measure, report and record filtering time for the entire dataset
             end = time.time()
             hours, rem = divmod(end - start, 3600)
@@ -1860,10 +1860,15 @@ class Parser(object):
 
     ## Evaluates accuracy, f1, precision and recall for the relevance classifier
     # based on the random sample from Neural_Relevance_Screen
-    def eval_relevance(self, num_annot=num_annot, sample_path=model_path + "/auto_labels/"):
+    def eval_relevance(self, num_annot=num_annot, sample_path=model_path + "/auto_labels/", trial=None):
 
-        # check that the random sample is available
-        sublabels = glob.glob(sample_path+"rel_sample_ratings-{}-{}-*".format(int(self.rel_sample_num / num_annot),balanced_rel_sample))
+        # check that the relevant random sample is available
+        if trial is None:
+            name = sample_path+"rel_sample_ratings-{}-{}-*".format(int(self.rel_sample_num / num_annot),balanced_rel_sample)
+        else:
+            name = sample_path+"rel_sample_ratings-{}-{}-*-{}*".format(int(self.rel_sample_num / num_annot),balanced_rel_sample,trial)
+        sublabels = glob.glob(name)
+
         labels = {i:{} for i in range(num_annot)}  # container for model predictions
         if len(sublabels) == 0:
             raise Exception("Relevance subsample ratings not found.")
@@ -1880,7 +1885,12 @@ class Parser(object):
                             else:
                                 labels[annotator][int(row[0].strip())] = int(row[2].strip())
 
-        subpreds = glob.glob(sample_path+"rel_sample_info-{}-{}-*".format(int(self.rel_sample_num / num_annot),balanced_rel_sample))
+        if trial is None:
+            name = sample_path+"rel_sample_info-{}-{}-*".format(int(self.rel_sample_num / num_annot),balanced_rel_sample)
+        else:
+            name = sample_path+"rel_sample_info-{}-{}-*-{}*".format(int(self.rel_sample_num / num_annot),balanced_rel_sample,trial)
+        subpreds = glob.glob(name)
+
         preds = {i:{} for i in range(num_annot)}  # container for human labels
         if len(subpreds) == 0:
             raise Exception("Relevance subsample labels not found.")
@@ -1921,7 +1931,7 @@ class Parser(object):
                         else:
                             raise Exception("Rater combinations not exhaustive.")
 
-        Kappas = np.zeros(int(scipy.misc.comb(num_annot, 2)))
+        Kappas = np.zeros(int(scipy.special.comb(num_annot, 2)))
         for idx,pair in enumerate(shared_set):
             rater_1 = []
             for index in shared_set[pair]:
@@ -1935,14 +1945,17 @@ class Parser(object):
         shared_label = {}
         for idx,pair in enumerate(shared_set):
             for index in shared_set[pair]:
-                if labels[pair[0]] == 1 or labels[pair[1]] == 1:
+                if labels[pair[0]][index] == 1 or labels[pair[1]][index] == 1:
                     shared_label[index] = 1
                 else:
                     shared_label[index] = 0
 
+        print("Indices of documents shared between annotators: ")
         print(shared_set)
 
         already_examined = []
+        relevant_counter = 0
+        irrelevant_counter = 0
         # populate the confusion matrix
         for annotator in labels.keys():
             for index in labels[annotator]:
@@ -1951,27 +1964,35 @@ class Parser(object):
                 else:
                     if index in shared_label.keys():
                         label = shared_label[index]
-                    else:
+                        if shared_label[index] == 1:
+                            relevant_counter += 1
+                        elif shared_label[index] == 0:
+                            irrelevant_counter += 1
+                    else: # might be BUGGY
                         label = labels[annotator][index]
 
                     if label == 1 and preds[annotator][index] == 1:
+                        relevant_counter += 1
                         if 'tp' in label_measures:
                             label_measures['tp'] += 1
                         else:
                             label_measures['tp'] = 1
                         accuracy += 1
                     elif label == 1:
+                        relevant_counter += 1
                         if 'fn' in label_measures:
                             label_measures['fn'] += 1
                         else:
                             label_measures['fn'] = 1
                     elif label == 0 and preds[annotator][index] == 0:
+                        irrelevant_counter += 1
                         if 'tn' in label_measures:
                             label_measures['tn'] += 1
                         else:
                             label_measures['tn'] = 1
                         accuracy += 1
                     elif label == 0:
+                        irrelevant_counter += 1
                         if 'fp' in label_measures:
                             label_measures['fp'] += 1
                         else:
@@ -2002,7 +2023,12 @@ class Parser(object):
             print("Number of ratings across annotators: " + str(rel_sample_num),file=f)
             print("Balanced sample: " + str(balanced_rel_sample))
             print("Balanced sample: " + str(balanced_rel_sample),file=f)
+            if not trial is None:
+                print("Trial number: " + str(trial))
+                print("Trial number: " + str(trial),file=f)
 
+            print("Proportion relevant: " + str(relevant_counter / (relevant_counter + irrelevant_counter)))
+            print("Proportion relevant: " + str(relevant_counter / (relevant_counter + irrelevant_counter)),file=f)
             print("Confusion matrix: " + str(label_measures))
             print("Confusion matrix: " + str(label_measures),file=f)
 
@@ -2383,4 +2409,3 @@ class Parser(object):
                     # Use timedict data to populate counts file
                     cumul_docs += docs
                     print(cumul_docs, end='\n', file=cfh)
-
