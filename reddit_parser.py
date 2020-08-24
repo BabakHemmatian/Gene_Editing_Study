@@ -1826,7 +1826,7 @@ class Parser(object):
                 yr = date[0]
                 mo = date[1]
                 with open(self.model_path + "/counts/RC_Count_List-{}-{}".format(yr, mo), "w") as f:
-                    print(str(monthly_count[idx]),end="\n",file=f)
+                    print(str(monthly_counter[idx]),end="\n",file=f)
 
             # update the auto-labels file and check that all negative comments
             # are removed from the dataset
