@@ -33,7 +33,7 @@ WRITE_ORIGINAL = True # Write original comments to file when parsing
 author = True # Write the username of each post's author to a separate file
 sentiment = False # Write sentence- and document-level sentiment of a post to
 # file (based on TextBlob and Vader)
-add_sentiment = True # Add CoreNLP sentiment values as a post-parsing step
+add_sentiment = False # Add CoreNLP sentiment values as a post-parsing step
 # NOTE: Make sure that Stanford CoreNLP's Python package is unzipped to the
 # same directory as this file and CoreNLP_server.py is also available before
 # running this function.
@@ -48,10 +48,10 @@ num_cores = 4 # Number of threads for sentence-by-sentence parallelization of
 # NOTE: Matters for optimization of the parallelizations used in the functions.
 # NOTE: On Brown University's supercomputer, batches of 24 months were found to
 # be optimal
-MaxVocab = 2000000 # maximum size of the vocabulary
+MaxVocab = 200000 # maximum size of the vocabulary
 FrequencyFilter = 1 # tokens with a frequency equal or less than this number
 # will be filtered out of the corpus (when NN=True)
-no_below = 5 # tokens that appear in less than this number of documents in
+no_below = 2 # tokens that appear in less than this number of documents in
 # corpus will be filtered out (when NN=False, i.e. for the LDA model)
 no_above = 0.99 # tokens that appear in more than this fraction of documents in
 # corpus will be filtered out
@@ -65,7 +65,7 @@ calculate_perc_rel = False # whether the percentage of relevant comments from
 # each year should be calculated and written to file
 num_process = 3 # the number of parallel processes to be executed for parsing
 # NOTE: Uses Python's multiprocessing package
-Neural_Relevance_Filtering = False # The dataset will be cleaned from posts
+Neural_Relevance_Filtering = True # The dataset will be cleaned from posts
 # irrelevant to the topic using a pre-trained neural network model.
 # NOTE: Needs results of parsing for the same dates with WRITE_ORIGINAL==True
 # NOTE: Requires a pre-trained simpletransformers model. One such model trained
@@ -100,7 +100,7 @@ n_random_comments = 1500 # number of comments to sample from each year for
 iterations = 1000 # number of times LDA posterior distributions will be sampled
 num_threads = 5 # number of threads used for parallelized processing of comments
 # Only matters if using _Threaded functions
-num_topics = 50 # number of topics to be generated in each LDA sampling
+num_topics = 10 # number of topics to be generated in each LDA sampling
 alpha = 0.1 # determines how many high probability topics will be assigned to a
 # document in general (not to be confused with NN l2regularization constant)
 minimum_probability = 0.01 # minimum acceptable probability for an output topic
@@ -182,7 +182,7 @@ sample_topics = 0.2 # proportion of topics that will be selected for reporting
 # NOTE: Must be a valid proportion (not None) if topic_idf = True
 top_topic_thresh = None # threshold for proportion contribution to the corpus
 # determining topics to report. Only matters if topic_idf = False
-topn = 20 # the number of high-probability words for each topic to be exported
+topn = 40 # the number of high-probability words for each topic to be exported
 # NOTE: Many of the words will inevitably be high probability general
 # non-content and non-framing words. So topn should be set to significantly
 # higher than the number of relevant words you wish to see
@@ -201,7 +201,7 @@ num_pop = None # number of the most up- or down-voted comments sampled for model
 
 ## where the data is
 file_path = os.path.abspath(__file__)
-model_path = os.path.dirname(file_path) + "/"
+model_path = os.path.dirname(file_path)
 # For the neural filtering
 rel_model_path = model_path+"/Human_Ratings/full_774/"
 data_path = model_path
@@ -263,20 +263,18 @@ for word in set(nltk.corpus.stopwords.words('english')):
         stop.append(str(word))
 
 ### Define the regex filter used for finding relevant comments
-
-regex_iteration = "2" 
-
+regex_iteration = 2
 engineering = []
-with open("engineering_" + regex_iteration + ".txt", 'r') as f: 
-    for line in f: 
+with open("engineering_" + str(regex_iteration) + ".txt", 'r') as f:
+    for line in f:
         engineering.append(re.compile(line.lower().strip()))
 
 genetic = []
-with open("genetic_" + regex_iteration + ".txt", 'r') as f:
-    for line in f: 
-        genetic.append(re.compile(line.lower().strip())) 
-        
+with open("genetic_" + str(regex_iteration) + ".txt", 'r') as f:
+    for line in f:
+        genetic.append(re.compile(line.lower().strip()))
+
 disease = []
-with open("disease_" + regex_iteration + ".txt", 'r') as f: 
-    for line in f: 
+with open("disease_" + str(regex_iteration) + ".txt", 'r') as f:
+    for line in f:
         disease.append(re.compile(line.lower().strip()))

@@ -32,7 +32,7 @@ from textblob import TextBlob
 from config import *
 from Utils import *
 from transformers import BertTokenizer
-from simpletransformers.classification import ClassificationModel
+# from simpletransformers.classification import ClassificationModel
 import pandas as pd
 import logging
 import fnmatch
@@ -104,11 +104,11 @@ class Parser(object):
 
     def __init__(self, nlp_wrapper=StanfordCoreNLP('http://localhost:9000'),bert_tokenizer=BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True), clean_raw=CLEAN_RAW, dates=dates,
                  download_raw=DOWNLOAD_RAW, hashsums=None, NN=NN, data_path=data_path,
-                 model_path=model_path,genetic=genetic, engineering=engineering, disease=disease,
+                 model_path=model_path,engineering=engineering, genetic=genetic, disease=disease,
                  stop=stop, write_original=WRITE_ORIGINAL,array=None,calculate_perc_rel=calculate_perc_rel,
                  vote_counting=vote_counting,author=author, sentiment=sentiment,
                  add_sentiment=add_sentiment,balanced_rel_sample=balanced_rel_sample,
-                 machine="local", on_file=on_file, num_process=num_process,
+                 machine=None, on_file=on_file, num_process=num_process,
                  rel_sample_num=rel_sample_num, num_cores=num_cores,num_annot=num_annot,
                  Neural_Relevance_Filtering=Neural_Relevance_Filtering):
         # check input arguments for valid type
@@ -135,8 +135,8 @@ class Parser(object):
         self.NN = NN
         self.data_path = data_path
         self.model_path = model_path
-        self.disease = disease
         self.engineering = engineering
+        self.disease = disease
         self.genetic = genetic
         self.stop = stop
         self.write_original = write_original
@@ -461,34 +461,34 @@ class Parser(object):
             elif self.machine == "ccv":
                 sentiments.append(avg_score)
 
-    @staticmethod
-    def is_relevant(text, automaton_marijuana, automaton_legal, regex_marijuana, regex_legal):
-        """
-        This function determines if a given comment is relevant (it mentions both marijuana and legal topics).
-        :param text: lower case text of a comment
-        :param automaton_marijuana: ahocorasick.Automaton object containing the marijuana key words
-        :param automaton_legal: ahocorasick.Automaton object containing the legal key words
-        :param regex_marijuana: a single regular expression
-        :param regex_legal: a single regular expression
-        :return: Boolean, True if text is relevant, False otherwise
-        """
-        for _ in automaton_marijuana.iter(text):
-            # note that we enter the loop only 1% of the time
-            for _ in automaton_legal.iter(text):
-                if not regex_marijuana.search(text) is None:
-                    # if the comment is marijuana relevant, check if it legal-relevant
-                    if not regex_legal.search(text) is None:
-                        return True
-                    else:
-                        # the comment is marijuana relevant, but not legal relevant
-                        return False
-                else:
-                    # the marijuana regex didn't match anything. So the comment is NOT relevant.
-                    return False
-            # the automaton_legal didn't find anything, so the comment is NOT relevant
-            return False
-        # the automaton_marijuana didn't find anything, so the comment is NOT relevant
-        return False
+    # @staticmethod
+    # def is_relevant(text, automaton_marijuana, automaton_legal, regex_marijuana, regex_legal):
+    #     """
+    #     This function determines if a given comment is relevant (it mentions both marijuana and legal topics).
+    #     :param text: lower case text of a comment
+    #     :param automaton_marijuana: ahocorasick.Automaton object containing the marijuana key words
+    #     :param automaton_legal: ahocorasick.Automaton object containing the legal key words
+    #     :param regex_marijuana: a single regular expression
+    #     :param regex_legal: a single regular expression
+    #     :return: Boolean, True if text is relevant, False otherwise
+    #     """
+    #     for _ in automaton_marijuana.iter(text):
+    #         # note that we enter the loop only 1% of the time
+    #         for _ in automaton_legal.iter(text):
+    #             if not regex_marijuana.search(text) is None:
+    #                 # if the comment is marijuana relevant, check if it legal-relevant
+    #                 if not regex_legal.search(text) is None:
+    #                     return True
+    #                 else:
+    #                     # the comment is marijuana relevant, but not legal relevant
+    #                     return False
+    #             else:
+    #                 # the marijuana regex didn't match anything. So the comment is NOT relevant.
+    #                 return False
+    #         # the automaton_legal didn't find anything, so the comment is NOT relevant
+    #         return False
+    #     # the automaton_marijuana didn't find anything, so the comment is NOT relevant
+    #     return False
 
     def LDA_Prep(self):
 
@@ -554,26 +554,26 @@ class Parser(object):
         if len(missing_parsing_files) != 0:  # if the processed data is incpmplete
 
                         # this will be used for efficient word searching
-            marijuana_keywords, legal_keywords = [], []
-            with open("alt_marijuana.txt", 'r') as f:
-                for line in f:
-                    marijuana_keywords.append(line.lower().rstrip("\n"))
-
-            with open("alt_legality.txt", 'r') as f:
-                for line in f:
-                    legal_keywords.append(line.lower().rstrip("\n"))
-
-            automaton_marijuana = ahocorasick.Automaton()
-            automaton_legal = ahocorasick.Automaton()
-
-            for idx, key in enumerate(marijuana_keywords):
-                automaton_marijuana.add_word(key, (idx, key))
-
-            for idx, key in enumerate(marijuana_keywords):
-                automaton_legal.add_word(key, (idx, key))
-
-            automaton_marijuana.make_automaton()
-            automaton_legal.make_automaton()
+            # marijuana_keywords, legal_keywords = [], []
+            # with open("alt_marijuana.txt", 'r') as f:
+            #     for line in f:
+            #         marijuana_keywords.append(line.lower().rstrip("\n"))
+            #
+            # with open("alt_legality.txt", 'r') as f:
+            #     for line in f:
+            #         legal_keywords.append(line.lower().rstrip("\n"))
+            #
+            # automaton_marijuana = ahocorasick.Automaton()
+            # automaton_legal = ahocorasick.Automaton()
+            #
+            # for idx, key in enumerate(marijuana_keywords):
+            #     automaton_marijuana.add_word(key, (idx, key))
+            #
+            # for idx, key in enumerate(marijuana_keywords):
+            #     automaton_legal.add_word(key, (idx, key))
+            #
+            # automaton_marijuana.make_automaton()
+            # automaton_legal.make_automaton()
 
             print("The following needed processed file(s) were missing for "
                   + str(year) + ", month " + str(month) + ":")
@@ -717,10 +717,8 @@ class Parser(object):
 
                 original_body = html.unescape(comment["body"])  # original text
 
-                is_relevant = Parser.is_relevant(original_body.lower(), automaton_marijuana, automaton_legal, marijuana[0], legality[0])
-
-                # filter comments by relevance to the topic according to regex
-                if is_relevant:
+                if any(not exp.search(original_body.lower()) is None for exp in genetic) and any(
+                        not exp.search(original_body.lower()) is None for exp in engineering) and any(not exp.search(original_body.lower()) is None for exp in disease):
 
                     # preprocess the comments
                     if self.NN:
@@ -1429,7 +1427,7 @@ class Parser(object):
 
     ### Uses a pre-trained neural network to identify irrelevant posts in the
     # dataset from a particular month
-    def Screen_One_Month(self, year, month, batch_size=1200):
+    def Screen_One_Month(self, year, month, batch_size=None):
 
         # set up neural network runtime configurations
         logging.basicConfig(level=logging.INFO)
@@ -1437,7 +1435,7 @@ class Parser(object):
         transformers_logger.setLevel(logging.WARNING)
 
         # load the pre-trained neural network from model_path
-        model = ClassificationModel('roberta', rel_model_path, use_cuda=False, num_labels= 3,
+        model = ClassificationModel('roberta', rel_model_path, use_cuda=False,
                                     args={'fp16': False, 'num_train_epochs': 1, 'manual_seed': 1, 'silent': True})
 
         total_count = 0  # counter for all documents in the dataset
@@ -1500,7 +1498,7 @@ class Parser(object):
     ### Runs Screen_One_Month either sequentially or in batches for all months
     # in dates, and aggregates the output
     def Neural_Relevance_Screen(self, rel_model_path=rel_model_path, dates=dates,
-                                rel_sample_num=rel_sample_num, batch_size=1200):
+                                rel_sample_num=rel_sample_num, batch_size=None):
 
         total_count = 0
 
@@ -1793,7 +1791,8 @@ class Parser(object):
                 filenames.append("/subreddit/subreddit")
 
             for idx,file in enumerate(filenames):  # for each file in the list above
-                monthly_counter = []
+                if idx == 0:
+                    monthly_counter = []
                 counter = 0
                 for yr, mo in self.dates:
                     monthly_count = 0
@@ -1827,7 +1826,7 @@ class Parser(object):
                 yr = date[0]
                 mo = date[1]
                 with open(self.model_path + "/counts/RC_Count_List-{}-{}".format(yr, mo), "w") as f:
-                    print(str(monthly_count[idx]),end="\n",file=f)
+                    print(str(monthly_counter[idx]),end="\n",file=f)
 
             # update the auto-labels file and check that all negative comments
             # are removed from the dataset
