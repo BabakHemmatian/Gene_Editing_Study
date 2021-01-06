@@ -527,6 +527,43 @@ class Parser(object):
 
         print("Warning! {} documents became empty after preprocessing.".format(empty_counter))
 
+    def LDA_Prep(self):
+
+        if not Path(self.model_path + "/original_comm/original_comm").is_file():
+            raise Exception('Original comments could not be found')
+        for yr,mo in self.dates:
+            if not Path(self.model_path + "/original_comm/original_comm-{}-{}".format(yr,mo)).is_file():
+                raise Exception('Monthly original comments could not be found.')
+        if not os.path.exists(self.model_path + "/lda_prep/"):
+            print("Creating directories to store the additional sentiment output")
+            os.makedirs(self.model_path + "/lda_prep")
+
+        empty_counter = 0
+        for yr,mo in self.dates:
+            with open(self.model_path + "/original_comm/original_comm-{}-{}".format(yr,mo),"r") as fin, open(self.model_path + "/lda_prep/lda_prep-{}-{}".format(yr,mo),"w") as fout, open(self.model_path + "/lda_prep/lda_prep","a+") as general:
+                for line in fin:  # for each comment
+                    original_body = line.strip()
+                    # clean the text for LDA
+                    body = self.LDA_clean(original_body)
+
+                    if body.strip() == "":  # if the comment is not empty after preprocessing
+                        empty_counter += 1
+                        print("",end="\n", file = general)
+                        print("",end="\n", file = fout)
+                    else:
+                        # remove mid-comment lines
+                        body = body.replace("\n", "")
+                        body = " ".join(body.split())
+
+                        # print the comment to file
+                        print(body, sep=" ", end="\n", file=general)
+                        print(body, sep=" ", end="\n", file=fout)
+
+                # timer
+                print("Finished parsing month {} of year {}".format(mo,yr)+ "at " + time.strftime('%l:%M%p, %m/%d/%Y'))
+
+        print("Warning! {} documents became empty after preprocessing.".format(empty_counter))
+
     ## The main parsing function
     # NOTE: Parses for LDA if NN = False
     # NOTE: Saves the text of the non-processed comment to file as well if write_original = True

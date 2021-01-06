@@ -61,7 +61,7 @@ training_fraction = 0.99 # what percentage of data will be used for learning the
 NN_training_fraction = 0.80 # fraction of the data that is used for training
 # the neural network.[1 - training_fraction] fraction of the dataset will be
 # divided randomly and equally into evaluation and test sets
-calculate_perc_rel = False # whether the percentage of relevant comments from
+calculate_perc_rel = True # whether the percentage of relevant comments from
 # each year should be calculated and written to file
 num_process = 3 # the number of parallel processes to be executed for parsing
 # NOTE: Uses Python's multiprocessing package
